@@ -75,9 +75,9 @@
 
   .type-display {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 48px;
+    font-size: clamp(18px, 5.5vw, 48px);
     font-weight: 400;
-    letter-spacing: -1px;
+    letter-spacing: -0.5px;
     line-height: 1;
     color: #F0EDE8;
     white-space: nowrap;
@@ -493,7 +493,7 @@
 ═══════════════════════════════════ */
 (function() {
   const FULL    = "don't get Burned";
-  const SPLIT   = 10;     // chars before "Burned"
+  const SPLIT   = 10;
   const CHAR_MS = 100;
   const LOOP_MS = 25000;
 
@@ -515,7 +515,6 @@
 
   function typeNext() {
     if (charIdx >= FULL.length) {
-      // typing done — shrink cursor to period
       cursor.classList.add('idle');
       return;
     }
@@ -524,7 +523,7 @@
       white.textContent += ch;
     } else {
       orange.textContent  += ch;
-      orange.dataset.text  = orange.textContent;  // keep pseudo-elements in sync
+      orange.dataset.text  = orange.textContent;
     }
     charIdx++;
     typeTimer = setTimeout(typeNext, CHAR_MS);
@@ -535,7 +534,7 @@
     typeNext();
     loopTimer = setTimeout(() => {
       clearTimeout(typeTimer);
-      setTimeout(startLoop, 200);  // brief blank pause before restart
+      setTimeout(startLoop, 200);
     }, LOOP_MS);
   }
 
