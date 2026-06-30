@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Burned.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0D0D0B;
+    min-height: 100vh;
+    font-family: 'JetBrains Mono', monospace;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── Popup notification ── */
+  .popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.96);
+    background: #111110;
+    border: 1px solid #2a2a28;
+    border-radius: 10px;
+    padding: 11px 16px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.45s ease, transform 0.45s ease;
+    z-index: 10;
+  }
+  .popup.visible {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    pointer-events: all;
+  }
+  .popup.out {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.96);
+    pointer-events: none;
+  }
+
+  .popup-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    cursor: pointer;
+  }
+
+  .popup-label {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: #F0EDE8;
+    transition: color 0.2s;
+  }
+  .popup-row:hover .popup-label { color: #C8521A; }
+
+  /* ── Main area (cursor + text + arrow) ── */
+  .main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 44px;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  .main.visible { opacity: 1; }
+
+  /* ── Typed text ── */
+  .type-display {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(26px, 5.5vw, 48px);
+    font-weight: 400;
+    letter-spacing: -0.5px;
+    line-height: 1;
+    color: #F0EDE8;
+    white-space: nowrap;
+  }
+  .type-display .orange { color: #C8521A; }
+
+  /* ── Ember block cursor ── */
+  .cursor {
+    display: inline-block;
+    width: 0.52em;
+    height: 1em;
+    background: #C8521A;
+    vertical-align: text-bottom;
+    animation: blink 0.85s step-end infinite;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+  }
+
+  /* ── Arrow button ── */
+  .arrow-btn {
+    width: 48px;
+    height: 48px;
+    background: transparent;
+    border: 1px solid #2a2a28;
+    border-radius: 12px;
+    color: #6b6b68;
+    font-size: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: border-color 0.2s, color 0.2s, opacity 0.8s ease;
+  }
+  .arrow-btn.visible { opacity: 1; }
+  .arrow-btn:hover   { border-color: #3a3a38; color: #9b9b98; }
+</style>
+</head>
+<body>
+
+<!-- Notification popup -->
+<div class="popup" id="popup">
+  <div class="popup-row" id="open-btn">
+    <svg width="16" height="13" viewBox="0 0 16 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0.6" y="0.6" width="14.8" height="11.8" rx="1.6" stroke="#C8521A" stroke-width="1.2"/>
+      <path d="M0.6 3L8 8L15.4 3" stroke="#C8521A" stroke-width="1.2" stroke-linecap="round"/>
+    </svg>
+    <span class="popup-label">new message</span>
+  </div>
+</div>
+
+<!-- Reveal: cursor → typed text → arrow -->
+<div class="main" id="main">
+  <div class="type-display">
+    <span id="tw"></span><span id="to" class="orange"></span><span class="cursor"></span>
+  </div>
+  <button class="arrow-btn" id="arrow-btn" onclick="window.location.href='burned_landing_v2.html'">&#x2192;</button>
+</div>
+
+<script>
+const popup    = document.getElementById('popup');
+const openBtn  = document.getElementById('open-btn');
+const main     = document.getElementById('main');
+const tw       = document.getElementById('tw');
+const to       = document.getElementById('to');
+const arrowBtn = document.getElementById('arrow-btn');
+
+const PREFIX  = 'code word: ';   // white
+const SECRET  = 'quarry';        // orange
+const CHAR_MS = 100;
+const PRE_MS  = 5000;            // cursor blinks 5s before typing starts
+
+// Show popup after 500ms
+setTimeout(() => popup.classList.add('visible'), 500);
+
+openBtn.addEventListener('click', () => {
+  popup.classList.remove('visible');
+  popup.classList.add('out');
+
+  // After popup fades out, reveal the main area (just the cursor)
+  setTimeout(() => {
+    main.classList.add('visible');
+    // Wait 5 seconds of cursor blinking, then type
+    setTimeout(startTyping, PRE_MS);
+  }, 450);
+});
+
+function startTyping() {
+  const FULL = PREFIX + SECRET;
+  let idx = 0;
+
+  function next() {
+    if (idx >= FULL.length) {
+      setTimeout(() => arrowBtn.classList.add('visible'), 500);
+      return;
+    }
+    const ch = FULL[idx];
+    if (idx < PREFIX.length) {
+      tw.textContent += ch;
+    } else {
+      to.textContent += ch;
+    }
+    idx++;
+    setTimeout(next, CHAR_MS);
+  }
+
+  next();
+}
+</script>
+</body>
+</html>
