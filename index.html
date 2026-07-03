@@ -71,17 +71,25 @@
   }
   .main.visible { opacity: 1; }
 
+  /* ── Type lines wrapper ── */
+  .type-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    text-align: center;
+  }
+
   /* ── Typed text ── */
   .type-display {
     font-family: 'JetBrains Mono', monospace;
-    font-size: clamp(26px, 5.5vw, 48px);
+    font-size: clamp(20px, 4vw, 38px);
     font-weight: 400;
     letter-spacing: -0.5px;
-    line-height: 1;
+    line-height: 1.3;
     color: #F0EDE8;
-    white-space: nowrap;
   }
-  .type-display .orange { color: #C8521A; }
+  #line2 { opacity: 0; transition: opacity 0.15s; }
 
   /* ── Ember block cursor ── */
   .cursor {
@@ -133,8 +141,9 @@
 
 <!-- Reveal: cursor → typed text → arrow -->
 <div class="main" id="main">
-  <div class="type-display">
-    <span id="tw"></span><span id="to" class="orange"></span><span class="cursor"></span>
+  <div class="type-wrap">
+    <div class="type-display" id="line1"><span id="tw1"></span><span class="cursor" id="cur1"></span></div>
+    <div class="type-display" id="line2"><span id="tw2"></span><span class="cursor" id="cur2"></span></div>
   </div>
   <button class="arrow-btn" id="arrow-btn" onclick="window.location.href='burned_landing_v2.html'">&#x2192;</button>
 </div>
@@ -143,14 +152,18 @@
 const popup    = document.getElementById('popup');
 const openBtn  = document.getElementById('open-btn');
 const main     = document.getElementById('main');
-const tw       = document.getElementById('tw');
-const to       = document.getElementById('to');
+const tw1      = document.getElementById('tw1');
+const tw2      = document.getElementById('tw2');
+const cur1     = document.getElementById('cur1');
+const cur2     = document.getElementById('cur2');
+const line2    = document.getElementById('line2');
 const arrowBtn = document.getElementById('arrow-btn');
 
-const PREFIX  = 'code word: ';   // white
-const SECRET  = 'quarry';        // orange
+const LINE1   = "Someone's looking for you.";
+const LINE2   = "Can you find them first?";
 const CHAR_MS = 100;
-const PRE_MS  = 5000;            // cursor blinks 5s before typing starts
+const PRE_MS  = 3000;   // cursor blinks 3s before typing
+const PAUSE   = 2000;   // pause between lines
 
 // Show popup after 500ms
 setTimeout(() => popup.classList.add('visible'), 500);
@@ -158,34 +171,41 @@ setTimeout(() => popup.classList.add('visible'), 500);
 openBtn.addEventListener('click', () => {
   popup.classList.remove('visible');
   popup.classList.add('out');
-
-  // After popup fades out, reveal the main area (just the cursor)
   setTimeout(() => {
     main.classList.add('visible');
-    // Wait 5 seconds of cursor blinking, then type
-    setTimeout(startTyping, PRE_MS);
+    setTimeout(typeLine1, PRE_MS);
   }, 450);
 });
 
-function startTyping() {
-  const FULL = PREFIX + SECRET;
+function typeLine1() {
   let idx = 0;
-
   function next() {
-    if (idx >= FULL.length) {
+    if (idx >= LINE1.length) {
+      // pause 2s then start line 2
+      setTimeout(() => {
+        cur1.style.opacity = '0';
+        cur1.style.animation = 'none';
+        line2.style.opacity = '1';
+        setTimeout(typeLine2, 80);
+      }, PAUSE);
+      return;
+    }
+    tw1.textContent += LINE1[idx++];
+    setTimeout(next, CHAR_MS);
+  }
+  next();
+}
+
+function typeLine2() {
+  let idx = 0;
+  function next() {
+    if (idx >= LINE2.length) {
       setTimeout(() => arrowBtn.classList.add('visible'), 500);
       return;
     }
-    const ch = FULL[idx];
-    if (idx < PREFIX.length) {
-      tw.textContent += ch;
-    } else {
-      to.textContent += ch;
-    }
-    idx++;
+    tw2.textContent += LINE2[idx++];
     setTimeout(next, CHAR_MS);
   }
-
   next();
 }
 </script>
