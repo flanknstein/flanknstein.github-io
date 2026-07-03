@@ -345,12 +345,15 @@
   resize();
   window.addEventListener('resize', resize);
 
+  // ember convergence
+  const E1_INIT = [0.16, 0.76];
+  const E2_INIT = [0.81, 0.22];
+
   const blips = [
     { fx: 0.14, fy: 0.18, size: 3,   ember: false, alpha: 0 },
     { fx: 0.82, fy: 0.24, size: 3,   ember: false, alpha: 0 },
     { fx: 0.07, fy: 0.52, size: 3.5, ember: false, alpha: 0 },
     { fx: 0.72, fy: 0.60, size: 3,   ember: false, alpha: 0 },
-    { fx: 0.38, fy: 0.72, size: 5,   ember: true,  alpha: 0.08 },
     { fx: 0.91, fy: 0.40, size: 2.5, ember: false, alpha: 0 },
     { fx: 0.24, fy: 0.82, size: 3,   ember: false, alpha: 0 },
     { fx: 0.60, fy: 0.86, size: 2.5, ember: false, alpha: 0 },
@@ -358,15 +361,24 @@
     { fx: 0.93, fy: 0.74, size: 3,   ember: false, alpha: 0 },
     { fx: 0.30, fy: 0.32, size: 2.5, ember: false, alpha: 0 },
     { fx: 0.65, fy: 0.42, size: 3,   ember: false, alpha: 0 },
+    // two converging ember blips
+    { fx: E1_INIT[0], fy: E1_INIT[1], size: 5, ember: true, alpha: 0 },
+    { fx: E2_INIT[0], fy: E2_INIT[1], size: 5, ember: true, alpha: 0 },
   ];
+  const ember1 = blips[blips.length - 2];
+  const ember2 = blips[blips.length - 1];
 
   const rings = [];
-  let lastRingTime = -3200;
+  let lastRingTime    = null;
   const RING_INTERVAL = 3200;
-  const FADE = 0.005;
-  let lastTime = null;
-  let pulseCount = 0;
-  let uiRevealed = false;
+  const FADE          = 0.005;
+  let lastTime        = null;
+  let pulseCount      = 0;
+  let uiRevealed      = false;
+  let firstRingPending = false;
+  let firstRingFired   = false;
+
+  window._fireFirstRing = function() { firstRingPending = true; };
 
   function draw(ts) {
     if (!lastTime) lastTime = ts;
@@ -396,19 +408,57 @@
     ctx.beginPath(); ctx.moveTo(0, cy);  ctx.lineTo(W, cy); ctx.stroke();
     ctx.globalAlpha = 1;
 
-    if (ts - lastRingTime > RING_INTERVAL) {
-      rings.push({ r: 0 });
+    function spawnRing() {
+      const pts = 180;
+      rings.push({ r: 0, offsets: Array.from({length: pts}, () => (Math.random() - 0.5) * 9) });
       lastRingTime = ts;
       pulseCount++;
-      if (pulseCount === 3 && !uiRevealed) {
+      if (pulseCount === 1 && !uiRevealed) {
         uiRevealed = true;
         document.getElementById('coming-soon').classList.add('visible');
         setTimeout(() => document.getElementById('learn-btn').classList.add('visible'), 1000);
       }
+
+      // Move white blips to new random positions (avoid center where embers converge)
+      blips.forEach(b => {
+        if (b.ember) return;
+        let fx, fy;
+        do {
+          fx = 0.05 + Math.random() * 0.90;
+          fy = 0.05 + Math.random() * 0.90;
+        } while (Math.sqrt((fx - 0.5) ** 2 + (fy - 0.5) ** 2) < 0.18);
+        b.fx    = fx;
+        b.fy    = fy;
+        b.alpha = 0;
+      });
+
+      // Wander ember blips toward each other; reset when they meet
+      const e1x = ember1.fx, e1y = ember1.fy;
+      const e2x = ember2.fx, e2y = ember2.fy;
+      const dist = Math.sqrt((e2x - e1x) ** 2 + (e2y - e1y) ** 2);
+      if (dist < 0.07) {
+        ember1.fx = E1_INIT[0]; ember1.fy = E1_INIT[1];
+        ember2.fx = E2_INIT[0]; ember2.fy = E2_INIT[1];
+      } else {
+        const wander = dist * 0.18;
+        ember1.fx = Math.max(0.04, Math.min(0.96, e1x + (e2x - e1x) * 0.18 + (Math.random() - 0.5) * wander));
+        ember1.fy = Math.max(0.04, Math.min(0.96, e1y + (e2y - e1y) * 0.18 + (Math.random() - 0.5) * wander));
+        ember2.fx = Math.max(0.04, Math.min(0.96, e2x + (e1x - e2x) * 0.18 + (Math.random() - 0.5) * wander));
+        ember2.fy = Math.max(0.04, Math.min(0.96, e2y + (e1y - e2y) * 0.18 + (Math.random() - 0.5) * wander));
+      }
+    }
+
+    if (firstRingPending) {
+      spawnRing();
+      firstRingPending = false;
+      firstRingFired   = true;
+      lastRingTime     = ts;
+    } else if (firstRingFired && lastRingTime !== null && ts - lastRingTime > RING_INTERVAL) {
+      spawnRing();
     }
 
     blips.forEach(b => {
-      b.alpha = Math.max(b.alpha - FADE, b.ember ? 0.06 : 0);
+      b.alpha = Math.max(b.alpha - FADE, 0);
     });
 
     const ringSpeed = maxR / 3400;
@@ -419,13 +469,27 @@
       const ringAlpha = Math.max(0, 0.45 * (1 - progress * 1.1));
 
       if (ringAlpha > 0) {
-        ctx.beginPath();
-        ctx.arc(cx, cy, ring.r, 0, Math.PI * 2);
+        const N   = ring.offsets.length;
+        const amp = (1 - ring.r / maxR) * 1.0; // ripple fades as ring expands
+
+        function ripplePath() {
+          ctx.beginPath();
+          for (let j = 0; j <= N; j++) {
+            const angle = (j / N) * Math.PI * 2;
+            const r2 = ring.r + ring.offsets[j % N] * amp;
+            const rx = cx + r2 * Math.cos(angle);
+            const ry = cy + r2 * Math.sin(angle);
+            j === 0 ? ctx.moveTo(rx, ry) : ctx.lineTo(rx, ry);
+          }
+          ctx.closePath();
+        }
+
+        ripplePath();
         ctx.strokeStyle = `rgba(200,82,26,${ringAlpha * 0.28})`;
         ctx.lineWidth = 6;
         ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(cx, cy, ring.r, 0, Math.PI * 2);
+
+        ripplePath();
         ctx.strokeStyle = `rgba(200,82,26,${ringAlpha})`;
         ctx.lineWidth = 0.9;
         ctx.stroke();
@@ -499,7 +563,7 @@
   const CHARS          = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*<>?/|[]{}';
   const CHAR_MS        = 100;
   const SCRAMBLE_SPEED = 69;
-  const SCRAMBLE_DUR   = 3000;
+  const SCRAMBLE_DUR   = 1000;
   const RESOLVE_SPEED  = 130;
   const BS_SPEED       = 80;   // ms per backspace step
   const LOOP_MS        = 25000;
@@ -553,6 +617,10 @@
 
   function onComplete() {
     cursor.classList.add('idle');
+    if (window._fireFirstRing) {
+      window._fireFirstRing();
+      window._fireFirstRing = null; // once only
+    }
     // calculate how long to idle before backspacing so loop = LOOP_MS exactly
     const elapsed  = Date.now() - loopStart;
     const bsTime   = (PREFIX.length + BURNED.length) * BS_SPEED + 280;
@@ -613,7 +681,7 @@
 /* ═══════════════════════════════════
    POPUP SHEET
 ═══════════════════════════════════ */
-const SHEET_TEXT = "Burned is a real-world deduction game that pairs you with a stranger in the same space. You start with a simple clue, then take turns asking yes or no questions to narrow down your search to find one another. First to find the other player and give the signal wins. No avatars, no maps, no screen between you and the moment. Just a crowd and your instincts.";
+const SHEET_TEXT = "Burned is a real-world deduction game that pairs you with a stranger in the area. You work against the clock to find each other through turn based questions. First to find the other player wins. No avatars, no maps, no screen between you and the moment. Just a crowd and your instincts.";
 
 let sheetTypeTimer = null;
 let sheetCharIdx   = 0;
@@ -641,4 +709,5 @@ function closeSheet() {
 }
 </script>
 </body>
+</html>
 </html>
