@@ -4,15 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Burned.</title>
-
 <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-PCS0J0C1ZK"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
   gtag('config', 'G-PCS0J0C1ZK');
 </script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
@@ -168,10 +170,9 @@ const arrowBtn = document.getElementById('arrow-btn');
 const LINE1   = "Someone's looking for you.";
 const LINE2   = "Can you find them first?";
 const CHAR_MS = 100;
-const PRE_MS  = 3000;   // cursor blinks 3s before typing
-const PAUSE   = 2000;   // pause between lines
+const PRE_MS  = 3000;
+const PAUSE   = 2000;
 
-// Show popup after 500ms
 setTimeout(() => popup.classList.add('visible'), 500);
 
 openBtn.addEventListener('click', () => {
@@ -187,7 +188,6 @@ function typeLine1() {
   let idx = 0;
   function next() {
     if (idx >= LINE1.length) {
-      // pause 2s then start line 2
       setTimeout(() => {
         cur1.style.opacity = '0';
         cur1.style.animation = 'none';
