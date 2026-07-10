@@ -1,0 +1,3900 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0D0D0B;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 40px 0;
+  }
+
+  /* --- PHONE SHELL --- */
+  .phone {
+    width: 375px;
+    height: 812px;
+    background: #0D0D0B;
+    border-radius: 40px;
+    border: 1px solid #2a2a28;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .notch {
+    position: absolute;
+    top: 52px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 4px;
+    background: #2a2a28;
+    border-radius: 4px;
+    z-index: 10;
+  }
+
+  .top-line {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(200,82,26,0.13), transparent);
+    z-index: 10;
+  }
+
+  .home-indicator {
+    position: absolute;
+    bottom: 36px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 134px;
+    height: 5px;
+    background: #3a3a38;
+    border-radius: 4px;
+    z-index: 10;
+  }
+
+  /* --- SCREEN BASE --- */
+  .screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+  }
+
+  .screen.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* --- GLOWS --- */
+  .glow {
+    position: absolute;
+    bottom: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 460px;
+    height: 280px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(200,82,26,0.22) 0%, rgba(200,82,26,0.02) 40%, transparent 72%);
+    pointer-events: none;
+    animation: ember-pulse 4s ease-in-out infinite;
+  }
+
+  .glow-inner {
+    position: absolute;
+    bottom: -90px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 220px;
+    height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(251,80,18,0.12) 0%, transparent 70%);
+    pointer-events: none;
+    animation: ember-pulse 4s ease-in-out infinite;
+    animation-delay: 0.6s;
+  }
+
+  @keyframes ember-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.45; }
+  }
+
+  /* --- PROGRESS DOTS --- */
+  .progress {
+    position: absolute;
+    bottom: 72px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    z-index: 5;
+  }
+
+  .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #2a2a28;
+    transition: background 0.3s, width 0.3s;
+  }
+
+  .dot.active {
+    background: #C8521A;
+    width: 16px;
+    border-radius: 3px;
+  }
+
+  /* --- BACK BUTTON --- */
+  .back-btn {
+    position: absolute;
+    top: 80px;
+    left: 28px;
+    background: none;
+    border: none;
+    color: #6b6b68;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 10;
+    padding: 0;
+  }
+
+  .back-arrow {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+  }
+
+  /* --- SHARED CONTENT --- */
+  .screen-content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 100px 32px 120px;
+  }
+
+  .screen-label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: #C8521A;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .screen-title {
+    font-size: 22px;
+    font-weight: 400;
+    color: #F0EDE8;
+    letter-spacing: 0;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  .screen-body {
+    font-size: 13px;
+    color: #6b6b68;
+    line-height: 1.8;
+    margin-bottom: 40px;
+  }
+
+  /* --- BUTTONS --- */
+  .btn-primary {
+    width: 100%;
+    padding: 16px;
+    background: #C8521A;
+    border: none;
+    border-radius: 12px;
+    color: #F0EDE8;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .btn-secondary {
+    width: 100%;
+    padding: 16px;
+    background: transparent;
+    border: 1px solid #2a2a28;
+    border-radius: 12px;
+    color: #6b6b68;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 12px;
+  }
+
+  .btn-ghost {
+    background: none;
+    border: none;
+    color: #6b6b68;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    cursor: pointer;
+    padding: 14px;
+    width: 100%;
+    letter-spacing: 0.02em;
+    margin-top: 4px;
+  }
+
+  /* --- INPUTS --- */
+  .input-group {
+    margin-bottom: 16px;
+  }
+
+  .input-label {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: #6b6b68;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .input-field {
+    width: 100%;
+    padding: 14px 16px;
+    background: #141412;
+    border: 1px solid #2a2a28;
+    border-radius: 10px;
+    color: #F0EDE8;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+    outline: none;
+    transition: border-color 0.2s;
+    letter-spacing: 0.01em;
+  }
+
+  .input-field:focus {
+    border-color: #C8521A;
+  }
+
+  .input-field::placeholder {
+    color: #3a3a38;
+  }
+
+  .input-hint {
+    font-size: 12px;
+    color: #3d3d3b;
+    margin-top: 7px;
+    letter-spacing: 0.01em;
+  }
+
+  /* --- CHOICE CARDS --- */
+  .choice-card {
+    width: 100%;
+    padding: 18px 20px;
+    background: #141412;
+    border: 1px solid #2a2a28;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    margin-bottom: 10px;
+    text-align: left;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .choice-card.selected {
+    border-color: #C8521A;
+    background: rgba(200,82,26,0.06);
+  }
+
+  .choice-title {
+    font-size: 13px;
+    color: #F0EDE8;
+    font-weight: 400;
+    margin-bottom: 4px;
+  }
+
+  .choice-desc {
+    font-size: 12px;
+    color: #6b6b68;
+    line-height: 1.8;
+  }
+
+  .choice-indicator {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid #2a2a28;
+    float: right;
+    margin-top: 2px;
+    transition: background 0.2s, border-color 0.2s;
+    flex-shrink: 0;
+  }
+
+  .choice-card.selected .choice-indicator {
+    background: #C8521A;
+    border-color: #C8521A;
+  }
+
+  /* --- BRIEFING CARDS --- */
+  .brief-card {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    padding: 18px 0;
+    border-bottom: 1px solid #1e1e1c;
+  }
+
+  .brief-card:last-child {
+    border-bottom: none;
+  }
+
+  .brief-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid #2a2a28;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: #C8521A;
+    flex-shrink: 0;
+    font-weight: 400;
+    margin-top: 1px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .brief-text-title {
+    font-size: 13px;
+    color: #F0EDE8;
+    font-weight: 400;
+    margin-bottom: 4px;
+    letter-spacing: 0.01em;
+  }
+
+  .brief-text-body {
+    font-size: 13px;
+    color: #6b6b68;
+    line-height: 1.8;
+  }
+
+  /* --- HOME SCREEN --- */
+  .home-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 80px 10px 0;
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+    width: 100%;
+  }
+
+  .home-wordmark {
+    font-size: 18px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #F0EDE8;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .home-wordmark span { color: #C8521A; }
+
+  .home-profile {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .home-profile-initial {
+    font-size: 13px;
+    color: #6b6b68;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .home-profile-active {
+    position: absolute;
+    top: -1px;
+    right: -1px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #C8521A;
+    border: 1.5px solid #0D0D0B;
+  }
+
+  /* SONAR AREA */
+  .sonar-area {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 55%;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .sonar-wrap {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+
+  #sonar-canvas {
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .sonar-vignette {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(to right, #0D0D0B 0%, transparent 12%, transparent 88%, #0D0D0B 100%),
+      linear-gradient(to bottom, #0D0D0B 0%, transparent 20%, transparent 80%, #0D0D0B 100%);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .sonar-status-label {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: #C8521A;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 6;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .sonar-count {
+    font-size: 22px;
+    font-weight: 400;
+    color: #F0EDE8;
+    letter-spacing: 0;
+    margin-bottom: 4px;
+    position: relative;
+    z-index: 6;
+  }
+
+  .sonar-location {
+    font-size: 13px;
+    color: #3d3d3b;
+    letter-spacing: 0.01em;
+    position: relative;
+    z-index: 6;
+  }
+
+  .sonar-location span { color: #6b6b68; }
+
+  /* ROUND AVAILABLE CARD */
+  .round-card {
+    margin: 0 28px;
+    padding: 18px 20px;
+    background: rgba(200,82,26,0.07);
+    border: 1px solid rgba(200,82,26,0.25);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+  }
+
+  .round-card-text {}
+  .round-card-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: #C8521A;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .round-card-title {
+    font-size: 15px;
+    font-weight: 400;
+    color: #F0EDE8;
+    margin-bottom: 2px;
+  }
+
+  .round-card-sub {
+    font-size: 12px;
+    color: #6b6b68;
+  }
+
+  .round-card-btn {
+    background: #C8521A;
+    border: none;
+    border-radius: 10px;
+    color: #F0EDE8;
+    font-size: 11px;
+    font-weight: 400;
+    padding: 10px 16px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-left: 16px;
+  }
+
+  /* FRIENDS STRIP */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 28px 10px;
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+  }
+
+  .section-title {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: #3d3d3b;
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .section-action {
+    font-size: 12px;
+    color: #C8521A;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 0;
+    letter-spacing: 0.02em;
+  }
+
+  .friends-strip {
+    display: flex;
+    gap: 10px;
+    padding: 0 28px;
+    overflow-x: auto;
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+    scrollbar-width: none;
+  }
+
+  .friends-strip::-webkit-scrollbar { display: none; }
+
+  .friend-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+
+  .friend-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #141412;
+    border: 1px solid #2a2a28;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: #6b6b68;
+    font-weight: 400;
+    position: relative;
+  }
+
+  .friend-avatar.nearby {
+    border-color: rgba(200,82,26,0.4);
+  }
+
+  .friend-avatar.en-route {
+    border-color: rgba(200,82,26,0.2);
+    border-style: dashed;
+  }
+
+  .friend-status-dot {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 1.5px solid #0D0D0B;
+  }
+
+  .friend-status-dot.nearby { background: #C8521A; }
+  .friend-status-dot.en-route { background: #4a4a48; }
+  .friend-status-dot.offline { background: #2a2a28; }
+
+  .friend-name {
+    font-size: 10px;
+    color: #3d3d3b;
+    text-align: center;
+    letter-spacing: 0.01em;
+    max-width: 48px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .friend-name.nearby { color: #6b6b68; }
+
+  /* MODE SELECT */
+  .mode-section {
+    padding: 20px 28px 0;
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+  }
+
+  .mode-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .mode-tile {
+    padding: 14px 16px;
+    background: #0f0f0d;
+    border: 1px solid #1e1e1c;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .mode-tile.active-mode {
+    border-color: rgba(200,82,26,0.35);
+    background: rgba(200,82,26,0.04);
+  }
+
+  .mode-tile-name {
+    font-size: 11px;
+    font-weight: 400;
+    color: #6b6b68;
+    margin-bottom: 2px;
+    letter-spacing: 0.06em;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .mode-tile.active-mode .mode-tile-name { color: #C8521A; }
+
+  .mode-tile-desc {
+    font-size: 10px;
+    color: #2a2a28;
+    letter-spacing: 0.01em;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .mode-tile.active-mode .mode-tile-desc { color: #3d3d3b; }
+
+  /* --- NAV --- */
+  .nav-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* --- SCREEN 1 SPECIFIC --- */
+  #s1 {
+    justify-content: center;
+    align-items: center;
+  }
+
+  .s1-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 0 40px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .hook {
+    margin-bottom: 56px;
+  }
+
+  .hook .l1 { font-size: 13px; color: #6b6b68; line-height: 1.6; letter-spacing: 0.01em; }
+  .hook .l2 { font-size: 13px; color: #C8521A; line-height: 1.6; letter-spacing: 0.01em; }
+
+  .s1-buttons { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+
+  /* --- SCREEN 2 SPECIFIC --- */
+  .hook-screen {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 0 36px;
+    height: 100%;
+    position: relative;
+    z-index: 2;
+  }
+
+  .hook-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: #C8521A;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .hook-line {
+    font-size: 26px;
+    font-weight: 400;
+    color: #F0EDE8;
+    letter-spacing: 0;
+    line-height: 1.1;
+    margin-bottom: 40px;
+  }
+
+  .hook-line em {
+    color: #C8521A;
+    font-style: normal;
+  }
+
+  .hook-sub {
+    font-size: 13px;
+    color: #6b6b68;
+    line-height: 1.8;
+    margin-bottom: 56px;
+  }
+
+  /* --- AGE GATE SPECIFIC --- */
+  .age-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 32px;
+  }
+
+  .age-card {
+    padding: 18px 20px;
+    background: #141412;
+    border: 1px solid #2a2a28;
+    border-radius: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: border-color 0.2s, background 0.2s;
+    font-family: 'JetBrains Mono', monospace;
+    text-align: left;
+    width: 100%;
+  }
+
+  .age-card.selected {
+    border-color: #C8521A;
+    background: rgba(200,82,26,0.06);
+  }
+
+  .age-card-text {
+    font-size: 13px;
+    color: #F0EDE8;
+    font-weight: 400;
+  }
+
+  .age-card-sub {
+    font-size: 12px;
+    color: #6b6b68;
+    margin-top: 2px;
+  }
+
+  .age-indicator {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid #2a2a28;
+    transition: background 0.2s, border-color 0.2s;
+    flex-shrink: 0;
+  }
+
+  .age-card.selected .age-indicator {
+    background: #C8521A;
+    border-color: #C8521A;
+  }
+
+  .age-notice {
+    font-size: 12px;
+    color: #3d3d3b;
+    line-height: 1.6;
+    text-align: center;
+    padding: 0 8px;
+    margin-bottom: 20px;
+  }
+
+  /* === ROUND FLOW STYLES === */
+
+  /* --- SHARED --- */
+
+  /* round header — timer + zone */
+  .round-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 76px 28px 0;
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+  }
+
+  .round-zone {
+    font-size: 11px;
+    color: #3d3d3b;
+    letter-spacing: 0.06em;
+  }
+
+  .round-zone span { color: #6b6b68; }
+
+  .round-timer {
+    font-size: 13px;
+    font-weight: 400;
+    color: #C8521A;
+    letter-spacing: 0.06em;
+    font-variant-numeric: tabular-nums;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .round-mode-badge {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: #3d3d3b;
+    text-transform: uppercase;
+    border: 1px solid #1e1e1c;
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* --- SCREEN 1 — DESCRIPTION CARD BUILDER --- */
+  .builder-wrap {
+    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 28px 100px;
+    position: relative;
+    z-index: 2;
+    overflow-y: auto;
+  }
+
+  .descriptor-input-wrap {
+    position: relative;
+    margin-bottom: 10px;
+  }
+
+  .descriptor-input {
+    width: 100%;
+    padding: 13px 44px 13px 16px;
+    background: #141412;
+    border: 1px solid #2a2a28;
+    border-radius: 10px;
+    color: #F0EDE8;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+    outline: none;
+    transition: border-color 0.2s;
+    letter-spacing: 0.01em;
+  }
+
+  .descriptor-input:focus { border-color: rgba(200,82,26,0.4); }
+  .descriptor-input::placeholder { color: #2a2a28; }
+
+  .descriptor-num {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    color: #2a2a28;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .word-valid   { color: #F0EDE8; }
+  .word-invalid { color: #C8521A; opacity: 0.8; }
+
+  .category-bar {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    margin-top: 4px;
+  }
+
+  .cat-pill {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid #1e1e1c;
+    color: #3d3d3b;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .cat-pill.hit {
+    border-color: rgba(200,82,26,0.35);
+    color: #C8521A;
+    background: rgba(200,82,26,0.05);
+  }
+
+  .preview-line {
+    font-size: 12px;
+    color: #3d3d3b;
+    line-height: 1.6;
+    padding: 12px 14px;
+    background: #0f0f0d;
+    border: 1px solid #1e1e1c;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    min-height: 42px;
+  }
+
+  .preview-line span { color: #6b6b68; font-style: italic; }
+
+  .desc-count {
+    font-size: 11px;
+    color: #3d3d3b;
+    margin-bottom: 16px;
+    letter-spacing: 0.04em;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .desc-count em { color: #C8521A; font-style: normal; }
+
+  /* --- SCREEN 2 — WAITING --- */
+  .waiting-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 36px;
+    position: relative;
+    z-index: 2;
+    text-align: center;
+  }
+
+  .waiting-ring {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    border: 1px solid rgba(200,82,26,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 32px;
+    position: relative;
+  }
+
+  .waiting-ring::before {
+    content: '';
+    position: absolute;
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    border: 1px solid rgba(200,82,26,0.12);
+    animation: waiting-breathe 2.4s ease-in-out infinite;
+  }
+
+  @keyframes waiting-breathe {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50%       { transform: scale(1.08); opacity: 0.5; }
+  }
+
+  .waiting-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #C8521A;
+    box-shadow: 0 0 8px rgba(200,82,26,0.5);
+  }
+
+  /* --- SCREEN 3 — HINT REVEAL --- */
+  .hint-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 36px 80px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .hint-card {
+    background: #111110;
+    border: 1px solid rgba(200,82,26,0.2);
+    border-radius: 16px;
+    padding: 28px 24px;
+    margin-bottom: 32px;
+  }
+
+  .hint-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: #C8521A;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .hint-text {
+    font-size: 22px;
+    font-weight: 400;
+    color: #F0EDE8;
+    letter-spacing: 0;
+    line-height: 1.3;
+  }
+  .hint-line {
+    margin-bottom: 8px;
+    font-size: 20px;
+    line-height: 1.5;
+  }
+  .hint-line:last-child { margin-bottom: 0; }
+
+  .hint-sub {
+    font-size: 13px;
+    color: #3d3d3b;
+    margin-top: 12px;
+    line-height: 1.5;
+  }
+
+  /* --- SCREEN 4 — ACTIVE ROUND --- */
+  .active-wrap {
+    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 28px 80px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .desc-card {
+    background: #111110;
+    border: 1px solid #1e1e1c;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    transition: border-color 0.3s;
+    flex-shrink: 0;
+  }
+
+  .desc-card.your-turn {
+    border-color: rgba(200,82,26,0.25);
+  }
+
+  .desc-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid #1a1a18;
+  }
+
+  .desc-card-title {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: #3d3d3b;
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .desc-card-count {
+    font-size: 10px;
+    color: #3d3d3b;
+    letter-spacing: 0.04em;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .q-timer {
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    color: #3d3d3b;
+    letter-spacing: 0.04em;
+    transition: color 0.2s;
+  }
+  .q-timer.urgent { color: #C8521A; }
+
+  @keyframes card-flash {
+    0%, 100% { border-color: rgba(200,82,26,0.7); box-shadow: 0 0 0 1px rgba(200,82,26,0.25); }
+    50%       { border-color: rgba(200,82,26,0.15); box-shadow: none; }
+  }
+  .desc-card.urgent {
+    animation: card-flash 1s step-end infinite;
+  }
+
+  .desc-card-body {
+    padding: 14px 16px;
+    min-height: 80px;
+  }
+
+  .qa-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    padding: 5px 0;
+    border-bottom: 1px solid #1a1a18;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1.4;
+  }
+  .qa-row:last-child { border-bottom: none; }
+  .qa-question { color: #6b6b68; flex: 1; }
+  .qa-row.yes .qa-question { color: #F0EDE8; }
+  .qa-row.no  .qa-question { color: #3d3d3b; text-decoration: line-through; }
+  .qa-badge {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .qa-row.yes .qa-badge { color: #C8521A; }
+  .qa-row.yes.bonus .qa-question { color: rgba(200, 82, 26, 0.55); }
+  .qa-row.yes.bonus .qa-badge    { color: rgba(200, 82, 26, 0.55); }
+  .qa-row.no  .qa-badge { color: #3d3d3b; }
+
+  .desc-line {
+    font-size: 13px;
+    color: #F0EDE8;
+    line-height: 1.7;
+    letter-spacing: 0.01em;
+    animation: line-fade-in 0.4s ease;
+  }
+
+  .desc-line.no {
+    color: #3d3d3b;
+    text-decoration: line-through;
+  }
+
+  @keyframes line-fade-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .q-extension {
+    border-top: 1px solid #1a1a18;
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.4s cubic-bezier(0.22,1,0.36,1);
+  }
+
+  .q-extension.open {
+    max-height: 220px;
+  }
+
+  .q-extension-inner {
+    padding: 14px 16px 16px;
+  }
+
+  .q-input-wrap {
+    position: relative;
+    margin-bottom: 10px;
+  }
+
+  .q-display {
+    width: 100%;
+    min-height: 44px;
+    padding: 11px 14px;
+    background: #0f0f0d;
+    border: 1px solid #2a2a28;
+    border-radius: 10px;
+    font-size: 13px;
+    color: #F0EDE8;
+    line-height: 1.5;
+    letter-spacing: 0.01em;
+    margin-bottom: 8px;
+    word-break: break-word;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .q-display .w-bad { color: #C8521A; }
+  .q-display .w-ok  { color: #F0EDE8; }
+
+  .q-real-input {
+    width: 100%;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+    background: #0f0f0d;
+    border: 1px solid #2a2a28;
+    border-radius: 10px;
+    outline: none;
+    padding: 11px 14px;
+    color: #F0EDE8;
+    caret-color: #C8521A;
+    resize: none;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .q-hint {
+    font-size: 11px;
+    color: #3d3d3b;
+    margin-bottom: 10px;
+    letter-spacing: 0.01em;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .q-hint span { color: #C8521A; }
+
+  .turn-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 0 4px;
+    flex-shrink: 0;
+  }
+
+  .turn-label {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #3d3d3b;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .turn-label.active { color: #C8521A; }
+
+  .turn-divider {
+    width: 1px; height: 10px;
+    background: #1e1e1c;
+  }
+
+  .answer-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .answer-btn {
+    flex: 1;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 400;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    border: none;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .answer-yes {
+    background: rgba(200,82,26,0.12);
+    color: #C8521A;
+    border: 1px solid rgba(200,82,26,0.25);
+  }
+
+  .answer-no {
+    background: #141412;
+    color: #6b6b68;
+    border: 1px solid #2a2a28;
+  }
+
+  .their-question {
+    background: #0f0f0d;
+    border: 1px solid #1e1e1c;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+  }
+
+  .their-q-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: #3d3d3b;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .their-q-text {
+    font-size: 13px;
+    color: #F0EDE8;
+    line-height: 1.5;
+  }
+
+  /* --- SCREEN 5 — LOCK IN --- */
+  .lockin-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 28px 100px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .lockin-card {
+    background: #111110;
+    border: 1px solid rgba(200,82,26,0.2);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+
+  .lockin-desc-line {
+    font-size: 13px;
+    color: #F0EDE8;
+    line-height: 1.8;
+  }
+
+  .lockin-desc-line.no {
+    color: #2a2a28;
+    text-decoration: line-through;
+  }
+
+  .lockin-warning {
+    font-size: 12px;
+    color: #3d3d3b;
+    line-height: 1.6;
+    margin-bottom: 28px;
+    padding: 0 4px;
+  }
+
+  .btn-lockin {
+    width: 100%;
+    padding: 18px;
+    background: transparent;
+    border: 1px solid rgba(200, 82, 26, 0.7);
+    border-radius: 12px;
+    color: rgba(200, 82, 26, 0.9);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    box-shadow: inset 0 0 14px rgba(200, 82, 26, 0.08);
+    animation: lockin-border-breathe 3s ease-in-out infinite;
+    position: relative;
+  }
+  .btn-lockin span {
+    display: inline-block;
+    animation: lockin-text-breathe 3s ease-in-out infinite;
+  }
+  .btn-lockin:active {
+    transform: scale(0.98);
+  }
+  .btn-lockin.inactive, .btn-lockin:disabled {
+    background: transparent;
+    border-color: rgba(255,255,255,0.08);
+    box-shadow: none;
+    color: rgba(255,255,255,0.2);
+    cursor: not-allowed;
+    animation: none;
+  }
+  .btn-lockin.inactive span, .btn-lockin:disabled span {
+    animation: none;
+    opacity: 0.2;
+  }
+  @keyframes lockin-border-breathe {
+    0%, 100% {
+      border-color: rgba(200, 82, 26, 0.45);
+      box-shadow: inset 0 0 10px rgba(200, 82, 26, 0.06);
+    }
+    50% {
+      border-color: rgba(200, 82, 26, 0.85);
+      box-shadow: inset 0 0 22px rgba(200, 82, 26, 0.18);
+    }
+  }
+  @keyframes lockin-text-breathe {
+    0%, 100% { opacity: 0.55; }
+    50%       { opacity: 0.95; }
+  }
+
+  /* --- SCREEN 6 — SIGNAL CONFIRMATION --- */
+  .signal-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 28px 100px;
+    position: relative;
+    z-index: 2;
+    width: 100%;
+  }
+
+  .signal-pair {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    margin-bottom: 24px;
+  }
+
+  .signal-card {
+    flex: 1;
+    background: #111110;
+    border: 1px solid #1e1e1c;
+    border-radius: 14px;
+    padding: 16px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .signal-card.yours {
+    border-color: rgba(200,82,26,0.3);
+    background: rgba(200,82,26,0.04);
+  }
+
+  .signal-card-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #3d3d3b;
+    margin-bottom: 12px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .signal-card.yours .signal-card-label { color: #C8521A; }
+
+  .signal-emoji {
+    font-size: 40px;
+    margin-bottom: 10px;
+    animation: signal-float 2.5s ease-in-out infinite;
+  }
+
+  .signal-card:nth-child(2) .signal-emoji { animation-delay: -1.2s; }
+
+  /* Sprite sheet gestures
+     Image: 1536×1024, 5 cols × 2 rows → each cell 307.2×512px (ratio 3:5)
+     Container: 66×110px preserves that exact ratio (66 * 512/307.2 = 110)
+     background-size: 330×220px → scale = 330/1536 = 0.2148 both axes ✓ */
+  .signal-sprite {
+    width: 66px;
+    height: 110px;
+    background-image: url('burned_icons_ember.png');
+    background-size: 330px 220px;
+    background-repeat: no-repeat;
+    margin: 0 auto 10px;
+    flex-shrink: 0;
+  }
+  /* Row 0 — x: col × -66px, y: 0 */
+  .sprite-point-up      { background-position:    0px   0px; }
+  .sprite-peace         { background-position:  -66px   0px; }
+  .sprite-fingers-cross { background-position: -132px   0px; }
+  .sprite-double-guns   { background-position: -198px   0px; }
+  .sprite-raised-fist   { background-position: -264px   0px; }
+  /* Row 1 — x: col × -66px, y: -110px */
+  .sprite-ok            { background-position:    0px -110px; }
+  .sprite-finger-gun    { background-position:  -66px -110px; }
+  .sprite-victory       { background-position: -132px -110px; }
+  .sprite-listening     { background-position: -198px -110px; }
+  .sprite-binoculars    { background-position: -264px -110px; }
+
+  @keyframes signal-float {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-6px); }
+  }
+
+  .signal-gesture {
+    font-size: 13px;
+    font-weight: 400;
+    color: #F0EDE8;
+    line-height: 1.4;
+  }
+
+  .signal-card:not(.yours) .signal-gesture { color: #6b6b68; }
+
+  .signal-instructions {
+    width: 100%;
+    background: #0f0f0d;
+    border: 1px solid #1e1e1c;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 24px;
+  }
+
+  .signal-instr-title {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: #3d3d3b;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .signal-instr-step {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+
+  .signal-instr-step:last-child { margin-bottom: 0; }
+
+  .signal-step-num {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid #2a2a28;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #C8521A;
+    flex-shrink: 0;
+    margin-top: 1px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .signal-step-text {
+    font-size: 13px;
+    color: #6b6b68;
+    line-height: 1.5;
+  }
+
+  .signal-waiting {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: #3d3d3b;
+    text-transform: uppercase;
+    animation: waiting-blink 1.8s ease-in-out infinite;
+    margin-bottom: 0;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .contact-popup {
+    position: absolute;
+    inset: 0;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    background: rgba(0,0,0,0.7);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  #disconnection-popup {
+    position: fixed;
+  }
+
+  .contact-popup.visible {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .contact-popup-sheet {
+    background: #111110;
+    border-top: 1px solid #2a2a28;
+    border-radius: 24px 24px 0 0;
+    padding: 24px 28px 60px;
+  }
+
+  .contact-popup-handle {
+    width: 40px; height: 4px;
+    background: #2a2a28;
+    border-radius: 4px;
+    margin: 0 auto 24px;
+  }
+
+  .contact-popup-icon {
+    font-size: 32px;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+
+  .contact-popup-title {
+    font-size: 18px;
+    font-weight: 400;
+    color: #F0EDE8;
+    letter-spacing: 0;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  .contact-popup-body {
+    font-size: 13px;
+    color: #6b6b68;
+    line-height: 1.8;
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  .contact-popup-body strong { color: #F0EDE8; font-weight: 400; }
+
+  @keyframes waiting-blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.3; }
+  }
+
+  /* --- SCREEN 7 — ROUND END --- */
+  .end-wrap {
+    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 28px 100px;
+    position: relative;
+    z-index: 2;
+    overflow-y: auto;
+  }
+
+  .result-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    align-self: flex-start;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .result-badge.win {
+    background: rgba(200,82,26,0.1);
+    border: 1px solid rgba(200,82,26,0.3);
+    color: #C8521A;
+  }
+
+  .result-badge.loss {
+    background: #141412;
+    border: 1px solid #2a2a28;
+    color: #6b6b68;
+  }
+
+  .score-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .score-tile {
+    flex: 1;
+    background: #111110;
+    border: 1px solid #1e1e1c;
+    border-radius: 12px;
+    padding: 14px;
+    text-align: center;
+  }
+
+  .score-val {
+    font-size: 26px;
+    font-weight: 400;
+    color: #F0EDE8;
+    letter-spacing: 0;
+    margin-bottom: 4px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .score-val.ember { color: #C8521A; }
+
+  .score-lbl {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: #3d3d3b;
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .reveal-card {
+    background: #111110;
+    border: 1px solid #1e1e1c;
+    border-radius: 16px;
+    padding: 18px 18px;
+    margin-bottom: 16px;
+  }
+
+  .reveal-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: #3d3d3b;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .reveal-line {
+    font-size: 13px;
+    color: #F0EDE8;
+    line-height: 1.8;
+  }
+
+  .reveal-line.confirmed {
+    color: #C8521A;
+  }
+
+  .reveal-line.missed {
+    color: #3d3d3b;
+  }
+
+  .btn-primary:disabled {
+    background: #2a2a28;
+    color: #3a3a38;
+    cursor: default;
+  }
+
+
+  /* ── Screen 1 decrypt title ── */
+  .s1-type-display {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 26px;
+    font-weight: 400;
+    letter-spacing: -0.5px;
+    line-height: 1;
+    color: #F0EDE8;
+    white-space: nowrap;
+    margin-bottom: 32px;
+  }
+
+  #s1-orange {
+    color: #C8521A;
+    display: inline-block;
+    position: relative;
+    animation: s1-glitch 13s linear infinite;
+  }
+
+  #s1-orange::before,
+  #s1-orange::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0; left: 0;
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+  #s1-orange::before { color: #fb5012; animation: s1-ghost-r 13s linear infinite; }
+  #s1-orange::after  { color: #5533ff; animation: s1-ghost-b 13s linear infinite; }
+
+  @keyframes s1-glitch {
+    0%, 100% { transform: translate(0); }
+    72%  { transform: translate(0); }
+    73%  { transform: translate(-3px,0); }
+    73.4%{ transform: translate(4px,0); }
+    73.8%{ transform: translate(-2px,0); }
+    74.2%{ transform: translate(0); }
+    86%  { transform: translate(0); }
+    86.5%{ transform: translate(2px,0); }
+    86.9%{ transform: translate(0); }
+  }
+
+  @keyframes s1-ghost-r {
+    0%, 71.5%, 74.5%, 100% { opacity:0; transform:translate(0); }
+    73%  { opacity:0.55; transform:translate(6px,0); }
+    73.5%{ opacity:0.45; transform:translate(5px,0); }
+    74%  { opacity:0; transform:translate(2px,0); }
+    86.5%{ opacity:0.3; transform:translate(4px,0); }
+    86.9%{ opacity:0; }
+  }
+
+  @keyframes s1-ghost-b {
+    0%, 71.5%, 74.5%, 100% { opacity:0; transform:translate(0); }
+    73%  { opacity:0.35; transform:translate(-5px,0); }
+    74.2%{ opacity:0; }
+    86.5%{ opacity:0.18; transform:translate(-3px,0); }
+    86.9%{ opacity:0; }
+  }
+
+  .s1-cursor {
+    display: inline-block;
+    width: 0.52em;
+    height: 1em;
+    background: #C8521A;
+    vertical-align: text-bottom;
+    animation: s1-blink 0.85s step-end infinite;
+    transition: width 0.35s ease, height 0.35s ease;
+  }
+  .s1-cursor.idle {
+    width: 0.18em;
+    height: 0.18em;
+    vertical-align: baseline;
+  }
+  @keyframes s1-blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="phone" id="phone">
+  <div class="notch"></div>
+  <div class="top-line"></div>
+  <div class="glow"></div>
+  <div class="glow-inner"></div>
+
+  <!-- SCREEN 1 — SPLASH -->
+  <div class="screen" id="s1">
+    <div class="s1-content">
+      <div class="s1-type-display">
+        <span id="s1-orange" data-text=""></span><span class="s1-cursor" id="s1-cursor"></span>
+      </div>
+      <div class="hook">
+        <p class="l1">Find them before they find you.</p>
+        <p class="l2">Good luck.</p>
+      </div>
+      <div class="s1-buttons">
+        <button class="btn-primary" onclick="goTo(2)">Create account</button>
+        <button class="btn-secondary" onclick="goTo(2)">I already have an account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 2 — THE HOOK -->
+  <div class="screen" id="s2">
+    <div class="hook-screen">
+      <div class="hook-eyebrow">Burned</div>
+      <div class="hook-line">
+        The crowd is your cover.<br>
+        Someone in it <em>is looking for you.</em>
+      </div>
+      <div class="hook-sub">
+        A real-world deduction game played in the spaces you already occupy. No screens between you and the moment.
+      </div>
+      <button class="btn-primary" onclick="goTo(3)">Let's go</button>
+    </div>
+    <div class="progress" id="prog2">
+      <div class="dot"></div>
+      <div class="dot active"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3 — SIGN UP -->
+  <div class="screen" id="s3">
+    <button class="back-btn" onclick="goTo(2)">
+      <svg class="back-arrow" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 12L6 8L10 4" stroke="#6b6b68" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Back
+    </button>
+    <div class="screen-content">
+      <div class="screen-label">Create your account</div>
+      <div class="screen-title">Choose your alias.</div>
+      <div class="screen-body">No real name. No photo. Just a username — the only identity you need in the field.</div>
+
+      <div class="input-group">
+        <label class="input-label" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>Username</span>
+          <span id="u-counter" style="color:#3d3d3b;font-size:11px;letter-spacing:0.04em;">0 / 20</span>
+        </label>
+        <div style="position:relative;margin-bottom:7px;">
+          <div id="u-display" style="
+            width:100%;min-height:48px;padding:13px 44px 13px 16px;
+            background:#141412;border:1px solid #2a2a28;border-radius:10px;
+            font-size:13px;font-family:'JetBrains Mono',monospace;letter-spacing:0.01em;
+            color:#F0EDE8;line-height:1.4;transition:border-color 0.2s;
+            word-break:break-all;">
+            <span style="color:#2a2a28;">ghost_in_the_crowd</span>
+          </div>
+          <input id="u-input" type="text" maxlength="20"
+            style="position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:text;font-size:13px;font-family:'JetBrains Mono',monospace;background:transparent;border:none;outline:none;padding:13px 44px 13px 16px;color:transparent;caret-color:#C8521A;"
+            oninput="handleUsername(this.value)"
+            placeholder="ghost_in_the_crowd" />
+          <div id="u-icon" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:13px;opacity:0;transition:opacity 0.2s;"></div>
+        </div>
+        <div id="u-hint" class="input-hint">Letters, numbers and underscores only. 3–20 characters.</div>
+      </div>
+
+      <div class="input-group" style="margin-bottom: 32px;">
+        <label class="input-label">Email</label>
+        <input class="input-field" type="email" id="email-input" placeholder="your@email.com" oninput="checkS3Continue()" />
+        <div class="input-hint">For account recovery only. Never shown to other players.</div>
+      </div>
+
+      <button class="btn-primary" id="s3-continue" onclick="goTo(4)" disabled>Continue</button>
+      <button class="btn-ghost" onclick="goTo(2)">Back</button>
+    </div>
+    <div class="progress" id="prog3">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot active"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+
+  <!-- SCREEN 4 — AGE VERIFICATION -->
+  <div class="screen" id="s4">
+    <button class="back-btn" onclick="goTo(3)">
+      <svg class="back-arrow" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 12L6 8L10 4" stroke="#6b6b68" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Back
+    </button>
+    <div class="screen-content">
+      <div class="screen-label">Before you play</div>
+      <div class="screen-title">How old are you?</div>
+      <div class="screen-body">We need to verify your age to unlock live rounds. Takes thirty seconds.</div>
+
+      <div class="age-options">
+        <button class="age-card" id="age18" onclick="selectAge('18')">
+          <div>
+            <div class="age-card-text">18 or older</div>
+            <div class="age-card-sub">Full access. All modes unlocked.</div>
+          </div>
+          <div class="age-indicator"></div>
+        </button>
+        <button class="age-card" id="age13" onclick="selectAge('13')">
+          <div>
+            <div class="age-card-text">13 – 17</div>
+            <div class="age-card-sub">Separate player pool. Parental consent required.</div>
+          </div>
+          <div class="age-indicator"></div>
+        </button>
+      </div>
+
+      <div id="consent-notice" style="
+        display:none;
+        background: rgba(200,82,26,0.05);
+        border: 1px solid rgba(200,82,26,0.18);
+        border-radius: 10px;
+        padding: 12px 14px;
+        margin-bottom: 16px;
+        font-size: 13px;
+        color: #6b6b68;
+        line-height: 1.6;
+      ">
+        A parent or guardian will need to complete consent during the verification step. You'll be handed off to our verification partner — we never see or store your ID.
+      </div>
+
+      <div class="age-notice" id="age-notice-default">Your ID is verified by a third party. We never see or store it.</div>
+
+      <button class="btn-primary" id="age-verify-btn" onclick="goTo(5)" disabled>Verify and continue</button>
+    </div>
+    <div class="progress" id="prog4">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot active"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+
+  <!-- SCREEN 5 — CONTACT PREFERENCE -->
+  <div class="screen" id="s5">
+    <button class="back-btn" onclick="goTo(4)">
+      <svg class="back-arrow" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 12L6 8L10 4" stroke="#6b6b68" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Back
+    </button>
+    <div class="screen-content">
+      <div class="screen-label">Your rules</div>
+      <div class="screen-title">Your Boundaries.</div>
+      <div class="screen-body">If someone identifies you, how do you want them to confirm it? You can change this before every round.</div>
+
+      <div style="margin-bottom: 32px;">
+        <button class="choice-card" id="c1" onclick="selectContact('approach')">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div>
+              <div class="choice-title">Comfortable being approached</div>
+              <div class="choice-desc">Winner confirms in person using the round signal. The full experience.</div>
+            </div>
+            <div class="choice-indicator"></div>
+          </div>
+        </button>
+
+        <button class="choice-card" id="c2" onclick="selectContact('app')">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div>
+              <div class="choice-title">App notification only</div>
+              <div class="choice-desc">No physical approach. Confirmation fires silently through the app.</div>
+            </div>
+            <div class="choice-indicator"></div>
+          </div>
+        </button>
+      </div>
+
+      <button class="btn-primary" onclick="goTo(6)">Set preference</button>
+    </div>
+    <div class="progress" id="prog5">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot active"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+
+  <!-- SCREEN 6 — HOW IT WORKS -->
+  <div class="screen" id="s6">
+    <div class="screen-content" style="padding-top: 88px;">
+      <div class="screen-label">The briefing</div>
+      <div class="screen-title" style="margin-bottom: 28px;">Here's how it works.</div>
+
+      <div class="brief-card">
+        <div class="brief-num">1</div>
+        <div>
+          <div class="brief-text-title">You're matched with someone nearby.</div>
+          <div class="brief-text-body">You both have the same objective, but only one of you gets burned.</div>
+        </div>
+      </div>
+
+      <div class="brief-card">
+        <div class="brief-num">2</div>
+        <div>
+          <div class="brief-text-title">You get a clue. So do they.</div>
+          <div class="brief-text-body">A soft clue drawn from their appearance. Narrows the crowd — doesn't solve it.</div>
+        </div>
+      </div>
+
+      <div class="brief-card">
+        <div class="brief-num">3</div>
+        <div>
+          <div class="brief-text-title">Take turns asking questions. Make them count.</div>
+          <div class="brief-text-body">Appearance only — clothing, hair, accessories. You ask, they answer. They ask, you answer. Every turn narrows the field.</div>
+        </div>
+      </div>
+
+      <div class="brief-card">
+        <div class="brief-num">4</div>
+        <div>
+          <div class="brief-text-title">Find them. Do the thing. Walk away.</div>
+          <div class="brief-text-body">Lock in your guess. Perform the finder signal near your target — they respond with theirs. No words needed. Just two people who already know.</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 32px;">
+        <button class="btn-primary" onclick="goTo(7)">I'm ready</button>
+      </div>
+    </div>
+    <div class="progress" id="prog6">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot active"></div>
+    </div>
+  </div>
+
+  <!-- SCREEN 7 — HOME -->
+  <div class="screen active" id="s7">
+
+    <div class="home-header" style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center;">
+      <div class="home-profile" onclick="toggleSheet()" style="justify-self:start;">
+        <span class="home-profile-initial">G</span>
+        <div class="home-profile-active"></div>
+      </div>
+      <div class="home-wordmark">Burned<span>.</span></div>
+      <button onclick="toggleSheet()" style="justify-self:end; width:34px;height:34px;background:none;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="#6b6b68" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <!-- sonar -->
+    <div class="sonar-area">
+      <div class="sonar-wrap">
+        <canvas id="sonar-canvas"></canvas>
+        <div class="sonar-vignette"></div>
+      </div>
+    </div>
+
+    <div style="flex:1;"></div>
+
+    <div style="padding: 0 28px 56px; position:relative; z-index:2; flex-shrink:0; width:100%;">
+      <button class="btn-primary" onclick="toggleRoundSheet()">Join round</button>
+    </div>
+
+    <!-- room code sheet -->
+    <div id="round-sheet" style="position:absolute;inset:0;z-index:25;pointer-events:none;opacity:0;transition:opacity 0.25s;">
+      <div onclick="toggleRoundSheet()" style="position:absolute;inset:0;background:rgba(0,0,0,0.65);"></div>
+      <div style="position:absolute;bottom:0;left:0;right:0;background:#111110;border-top:1px solid #2a2a28;border-radius:24px 24px 0 0;padding:24px 28px 56px;">
+        <div style="width:40px;height:4px;background:#2a2a28;border-radius:4px;margin:0 auto 24px;"></div>
+
+        <div style="font-size:10px;letter-spacing:0.12em;color:#C8521A;text-transform:uppercase;margin-bottom:8px;font-family:'JetBrains Mono',monospace;">Join a round</div>
+        <div style="font-size:18px;color:#F0EDE8;margin-bottom:6px;font-family:'JetBrains Mono',monospace;">Enter your room code.</div>
+        <div style="font-size:12px;color:#3d3d3b;margin-bottom:24px;font-family:'JetBrains Mono',monospace;">Your code was sent to you before the round.</div>
+
+        <input id="room-code-input" type="text" maxlength="8"
+          style="width:100%;padding:14px 16px;background:#141412;border:1px solid #2a2a28;border-radius:10px;color:#F0EDE8;font-size:20px;font-family:'JetBrains Mono',monospace;outline:none;letter-spacing:0.18em;text-transform:uppercase;text-align:center;margin-bottom:8px;transition:border-color 0.2s;"
+          placeholder="WOLF-7"
+          oninput="handleRoomCode(this.value)"
+          onfocus="this.style.borderColor='rgba(200,82,26,0.4)'"
+          onblur="this.style.borderColor='#2a2a28'" />
+        <div style="font-size:11px;color:#3d3d3b;margin-bottom:28px;text-align:center;font-family:'JetBrains Mono',monospace;">Case insensitive.</div>
+
+        <button class="btn-primary" id="room-code-btn" onclick="fbConfirmRoom()" disabled style="margin-bottom:10px;">Confirm — let's go</button>
+
+        <button onclick="toggleRoundSheet()" style="width:100%;padding:14px;background:none;border:none;color:#3d3d3b;font-size:12px;cursor:pointer;font-family:'JetBrains Mono',monospace;">Cancel</button>
+      </div>
+    </div>
+
+
+    <!-- slide-up sheet -->
+    <div id="home-sheet" style="position:absolute;inset:0;z-index:20;pointer-events:none;opacity:0;transition:opacity 0.25s;">
+      <div onclick="toggleSheet()" style="position:absolute;inset:0;background:rgba(0,0,0,0.6);"></div>
+      <div style="position:absolute;bottom:0;left:0;right:0;background:#111110;border-top:1px solid #2a2a28;border-radius:24px 24px 0 0;padding:24px 28px 60px;" id="sheet-inner">
+        <div style="width:40px;height:4px;background:#2a2a28;border-radius:4px;margin:0 auto 28px;"></div>
+
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:28px;">
+          <div style="width:44px;height:44px;border-radius:50%;background:#141412;border:1px solid rgba(200,82,26,0.3);display:flex;align-items:center;justify-content:center;font-size:16px;color:#C8521A;font-weight:400;font-family:'JetBrains Mono',monospace;">G</div>
+          <div>
+            <div style="font-size:13px;color:#F0EDE8;font-weight:400;font-family:'JetBrains Mono',monospace;">ghost_in_the_crowd</div>
+            <div style="font-size:12px;color:#6b6b68;margin-top:2px;font-family:'JetBrains Mono',monospace;">Active · Scout mode</div>
+          </div>
+        </div>
+
+        <div style="height:1px;background:#1e1e1c;margin-bottom:20px;"></div>
+
+        <div style="font-size:10px;letter-spacing:0.12em;color:#3d3d3b;text-transform:uppercase;margin-bottom:14px;font-family:'JetBrains Mono',monospace;">Curated modes</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;">
+          <button style="background:#141412;border:1px solid #2a2a28;border-radius:12px;padding:14px 16px;text-align:left;cursor:pointer;font-family:'JetBrains Mono',monospace;">
+            <div style="font-size:13px;color:#F0EDE8;font-weight:400;margin-bottom:2px;">Pursuit</div>
+            <div style="font-size:12px;color:#6b6b68;">Challenge a friend · requires mutual proximity</div>
+          </button>
+          <button style="background:#141412;border:1px solid #2a2a28;border-radius:12px;padding:14px 16px;text-align:left;cursor:pointer;font-family:'JetBrains Mono',monospace;">
+            <div style="font-size:13px;color:#F0EDE8;font-weight:400;margin-bottom:2px;">Infiltrator</div>
+            <div style="font-size:12px;color:#6b6b68;">Group + stranger · set up a session</div>
+          </button>
+          <button style="background:#141412;border:1px solid #2a2a28;border-radius:12px;padding:14px 16px;text-align:left;cursor:pointer;font-family:'JetBrains Mono',monospace;">
+            <div style="font-size:13px;color:#F0EDE8;font-weight:400;margin-bottom:2px;">Double Agent</div>
+            <div style="font-size:12px;color:#6b6b68;">Closed group · hidden role format</div>
+          </button>
+        </div>
+
+        <div style="height:1px;background:#1e1e1c;margin-bottom:20px;"></div>
+
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;">
+            <span style="font-size:13px;color:#6b6b68;font-family:'JetBrains Mono',monospace;">Contact preference</span>
+            <span style="font-size:12px;color:#3d3d3b;font-family:'JetBrains Mono',monospace;">Active confirmation ›</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;">
+            <span style="font-size:13px;color:#6b6b68;font-family:'JetBrains Mono',monospace;">Stats</span>
+            <span style="font-size:12px;color:#3d3d3b;font-family:'JetBrains Mono',monospace;">12 rounds ›</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;">
+            <span style="font-size:13px;color:#6b6b68;font-family:'JetBrains Mono',monospace;">Friends</span>
+            <span style="font-size:12px;color:#3d3d3b;font-family:'JetBrains Mono',monospace;">Manage ›</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;">
+            <span style="font-size:13px;color:#6b6b68;font-family:'JetBrains Mono',monospace;">Account &amp; privacy</span>
+            <span style="font-size:12px;color:#3d3d3b;font-family:'JetBrains Mono',monospace;">›</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="glow"></div>
+    <div class="glow-inner"></div>
+  </div>
+
+  <div class="home-indicator"></div>
+
+<!-- SCREEN 8 — reserved for future location confirmation feature -->
+
+  <!-- SCREEN 9 — DESCRIPTION CARD BUILDER -->
+  <div class="screen" id="s9">
+
+    <!-- waiting-for-opponent overlay -->
+    <div id="s9-waiting" style="display:none;position:absolute;inset:0;z-index:30;background:#0D0D0B;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
+      <div style="font-size:10px;letter-spacing:0.12em;color:#C8521A;text-transform:uppercase;font-family:'JetBrains Mono',monospace;">Waiting</div>
+      <div style="font-size:18px;color:#F0EDE8;font-family:'JetBrains Mono',monospace;">Opponent joining...</div>
+      <div style="font-size:12px;color:#3d3d3b;font-family:'JetBrains Mono',monospace;">The round begins once both players are in.</div>
+    </div>
+
+    <div class="builder-wrap" style="padding-top:88px;">
+      <div class="screen-label">Before we begin</div>
+      <div class="screen-title">Describe yourself.</div>
+      <div class="screen-body">Use at least two words per descriptor — colour, material, style. <em>"Red knit jumper"</em> not <em>"jumper"</em>. Your opponent only gets part of each clue.</div>
+
+      <div class="desc-count">Descriptors: <em id="d-count">0</em> / 3 &nbsp;·&nbsp; all required</div>
+
+      <div class="descriptor-input-wrap">
+        <input class="descriptor-input" id="d1" placeholder="e.g. red knit jumper" oninput="updateCount()" />
+        <span class="descriptor-num">1</span>
+      </div>
+      <div class="descriptor-input-wrap">
+        <input class="descriptor-input" id="d2" placeholder="e.g. dark curly hair" oninput="updateCount()" />
+        <span class="descriptor-num">2</span>
+      </div>
+      <div class="descriptor-input-wrap" style="margin-bottom:24px;">
+        <input class="descriptor-input" id="d3" placeholder="e.g. black tote bag" oninput="updateCount()" />
+        <span class="descriptor-num">3</span>
+      </div>
+
+      <div class="preview-line" id="hint-preview">Your opponent will receive: <span>fill in all three descriptors to preview.</span></div>
+
+      <button class="btn-primary" id="lock-btn" onclick="fbSubmitDescriptors()" disabled>Lock in and wait</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 10 — WAITING -->
+  <div class="screen" id="s10">
+    <div class="waiting-wrap">
+      <div class="waiting-ring">
+        <div class="waiting-dot"></div>
+      </div>
+      <div class="screen-label">Waiting</div>
+      <div class="screen-title" style="font-size:22px;">Your card is locked.</div>
+      <div class="screen-body" style="margin-bottom:0;">Waiting for your opponent to lock in. The round starts the moment they confirm.</div>
+    </div>
+
+    <div style="position:absolute;bottom:90px;left:28px;right:28px;z-index:2;display:flex;flex-direction:column;gap:10px;">
+      <button class="btn-secondary" onclick="goTo(9)" style="margin-top:0;">Edit my card</button>
+      <button onclick="fbLeaveRoom();goTo(7);" style="width:100%;padding:12px;background:none;border:none;color:#3d3d3b;font-size:12px;cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;">Leave round</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 11 — HINT REVEAL -->
+  <div class="screen" id="s11">
+    <div class="hint-wrap" style="padding-top:88px;">
+      <div class="screen-label">Opening hint</div>
+      <div class="screen-title">They're in the room.<br>Start looking.</div>
+
+      <div class="hint-card">
+        <div class="hint-eyebrow">Your target</div>
+        <div class="hint-text" id="hint-lines">
+          <div class="hint-line" id="hint-line-1"></div>
+          <div class="hint-line" id="hint-line-2"></div>
+          <div class="hint-line" id="hint-line-3"></div>
+        </div>
+      </div>
+
+      <div class="screen-body" style="margin-bottom:28px;">One word per clue is hidden. Ask questions to fill in the gaps.</div>
+      <div id="hint-countdown" style="font-size:13px;color:#6b6b68;font-family:'JetBrains Mono',monospace;letter-spacing:0.08em;">Waiting for opponent...</div>
+    </div>
+  </div>
+
+  <!-- SCREEN 12 — ACTIVE ROUND -->
+  <div class="screen" id="s12">
+    <div class="round-header" style="justify-content:center;">
+      <div class="round-timer" id="timer-s4">15:00</div>
+    </div>
+
+    <div class="active-wrap">
+
+      <div class="turn-bar" id="turn-bar">
+        <span class="turn-label active" id="lbl-your">Your turn</span>
+        <div class="turn-divider"></div>
+        <span class="turn-label" id="lbl-their">Their turn</span>
+      </div>
+
+      <div class="desc-card your-turn" id="desc-card" style="margin-top:10px;">
+        <div class="desc-card-header">
+          <span class="desc-card-title">Target profile</span>
+          <span class="q-timer" id="q-timer">0:25</span>
+        </div>
+        <div class="desc-card-body" id="desc-card-body">
+          <div style="font-size:12px;color:#3d3d3b;padding:8px 0;font-family:'JetBrains Mono',monospace;">Ask questions to build your profile.</div>
+        </div>
+
+        <div class="q-extension" id="q-ext">
+          <div class="q-extension-inner">
+            <div class="q-hint">Ask about appearance only — clothing, hair, accessories.</div>
+            <div class="q-input-wrap" id="q-input-wrap">
+              <textarea class="q-real-input" id="q-input" rows="2"
+                oninput="handleQInput(this.value)"
+                placeholder="Type your question..."></textarea>
+            </div>
+            <div id="q-error" style="font-size:11px;color:#C8521A;font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;margin-bottom:8px;min-height:14px;opacity:0;transition:opacity 0.2s;"></div>
+            <button class="btn-primary" id="send-btn" style="padding:12px;" disabled onclick="submitQuestion()">Send question</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="their-question" id="their-q-box" style="display:none;">
+        <div class="their-q-label">They asked</div>
+        <div class="their-q-text" id="their-q-text">"..."</div>
+        <div class="answer-row">
+          <button class="answer-btn answer-yes" onclick="answerQuestion('yes')">Yes</button>
+          <button class="answer-btn answer-no" onclick="answerQuestion('no')">No</button>
+        </div>
+      </div>
+
+      <div style="position:absolute;bottom:90px;left:28px;right:28px;z-index:2;">
+        <button class="btn-lockin" id="lockin-btn" onclick="goTo(13)" disabled><span>Lock in →</span></button>
+      </div>
+
+    </div>
+
+    <!-- Target popup accessible from active round -->
+    <div class="contact-popup" id="target-popup-s12">
+      <div class="contact-popup-sheet">
+        <div class="contact-popup-handle"></div>
+        <div class="signal-sprite sprite-point-up" id="popup-s12-signal-icon" style="margin:0 auto 12px;"></div>
+        <div class="contact-popup-title">Someone's found you.</div>
+        <div class="contact-popup-body">
+          Respond with your signal if it's really them.<br><br>
+          <strong>1.</strong> Wait for them to signal you first.<br>
+          <strong>2.</strong> If it feels right, respond with yours — keep it casual.<br>
+          <strong>3.</strong> Tap below once the exchange is done.
+        </div>
+        <div style="display:flex;gap:10px;margin-top:4px;">
+          <button id="evade-btn" onclick="fbEvade()" disabled style="flex:1;padding:13px;background:#141412;border:1px solid #2a2a28;border-radius:10px;color:#3d3d3b;font-size:12px;cursor:not-allowed;font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;">Not me (15s)</button>
+          <button onclick="fbWriteOutcome('Burned');dismissTargetPopupS12();" class="btn-primary" style="flex:1;">Burned</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 13 — LOCK IN -->
+  <div class="screen" id="s13">
+    <div class="round-header" style="justify-content:center;">
+      <div class="round-timer" id="timer-s13">15:00</div>
+    </div>
+
+    <div class="lockin-wrap">
+      <div class="screen-label">Lock in</div>
+      <div class="screen-title">Eyes on your target.</div>
+
+      <div class="lockin-card" id="lockin-card"></div>
+
+      <div class="lockin-warning">If you guess incorrectly, the round continues on to your opponent's turn.<br><br>Remember — if they see you signal the wrong person they will have the upper hand.</div>
+
+      <button class="btn-primary" onclick="fbLockIn()" style="margin-bottom:12px;">I'm certain — lock in</button>
+      <button class="btn-secondary" onclick="goTo(12)">Keep asking questions</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 14 — SIGNAL CONFIRMATION -->
+  <div class="screen" id="s14">
+    <div class="round-header" style="justify-content:center;">
+      <div class="round-timer" id="timer-s14">15:00</div>
+    </div>
+
+    <div class="signal-wrap">
+      <div class="screen-label" style="align-self:flex-start;">You've locked in.</div>
+      <div class="screen-title" style="align-self:flex-start;margin-bottom:20px;">Make the exchange.</div>
+
+      <div class="signal-pair">
+        <div class="signal-card yours">
+          <div class="signal-card-label">Your signal</div>
+          <div class="signal-sprite sprite-peace" id="seeker-signal-icon"></div>
+          <div class="signal-gesture" id="seeker-signal-label">Peace sign</div>
+        </div>
+        <div class="signal-card">
+          <div class="signal-card-label">They respond with</div>
+          <div class="signal-sprite sprite-point-up" id="target-signal-icon"></div>
+          <div class="signal-gesture" id="target-signal-label">One finger up</div>
+        </div>
+      </div>
+
+      <div class="signal-instructions">
+        <div class="signal-instr-title">How it plays out</div>
+        <div class="signal-instr-step">
+          <div class="signal-step-num">1</div>
+          <div class="signal-step-text">Find your target in the room. Look for what you've confirmed on the card.</div>
+        </div>
+        <div class="signal-instr-step">
+          <div class="signal-step-num">2</div>
+          <div class="signal-step-text">Perform your signal near them — casually. It should read as nothing to anyone else.</div>
+        </div>
+        <div class="signal-instr-step">
+          <div class="signal-step-num">3</div>
+          <div class="signal-step-text">If you've got the right person, they'll respond with theirs. Round confirmed.</div>
+        </div>
+      </div>
+
+      <div class="signal-waiting">Waiting for confirmation</div>
+    </div>
+
+    <div class="contact-popup" id="contact-popup">
+      <div class="contact-popup-sheet">
+        <div class="contact-popup-handle"></div>
+        <div class="contact-popup-icon">🤚</div>
+        <div class="contact-popup-title">No physical approach</div>
+        <div class="contact-popup-body">
+          Your opponent opted out of being approached.<br><br>
+          <strong>Confirmation will happen via app notification.</strong><br><br>
+          Stay where you are — if you've identified the right person, you'll both receive confirmation simultaneously.
+        </div>
+        <button class="btn-primary" onclick="dismissPopup()">Got it</button>
+      </div>
+    </div>
+
+    <!-- Target popup sheet -->
+    <div class="contact-popup" id="target-popup">
+      <div class="contact-popup-sheet">
+        <div class="contact-popup-handle"></div>
+        <div class="signal-sprite sprite-point-up" id="popup-target-signal-icon" style="margin:0 auto 12px;"></div>
+        <div class="contact-popup-title">Someone's found you.</div>
+        <div class="contact-popup-body">
+          Respond with your signal if it's really them.<br><br>
+          <strong>1.</strong> Wait for them to signal you first.<br>
+          <strong>2.</strong> If it feels right, respond with yours — keep it casual.<br>
+          <strong>3.</strong> Confirm below once the exchange is done.
+        </div>
+        <div style="display:flex;gap:10px;margin-top:4px;">
+          <button onclick="dismissTargetPopup();goTo(12);" style="flex:1;padding:13px;background:#141412;border:1px solid #2a2a28;border-radius:10px;color:#6b6b68;font-size:12px;cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;">Not me</button>
+          <button onclick="fbWriteOutcome('Burned');dismissTargetPopup();" class="btn-primary" style="flex:1;">Burned</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Disconnection popup — global, not scoped to any screen -->
+    <div class="contact-popup" id="disconnection-popup">
+      <div class="contact-popup-sheet">
+        <div class="contact-popup-handle"></div>
+        <div class="contact-popup-title" style="margin-top:8px;">Connection lost.</div>
+        <div class="contact-popup-body" style="margin-bottom:24px;">
+          Your opponent has lost connection.<br><br>
+          If their signal dropped briefly, the round will resume on its own. If they've closed the app entirely, the round cannot continue.
+        </div>
+        <button class="btn-secondary" onclick="fbLeaveRoom();goTo(7);">Go back</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SCREEN 15 — ROUND END -->
+  <div class="screen" id="s15">
+    <div class="round-header" style="justify-content:center;">
+      <div class="round-zone" style="color:#C8521A;font-size:11px;letter-spacing:0.08em;font-family:'JetBrains Mono',monospace;">Round complete</div>
+    </div>
+
+    <div class="end-wrap">
+      <div class="result-badge win" id="result-badge">✓ &nbsp;You found them</div>
+
+      <div class="score-row">
+        <div class="score-tile">
+          <div class="score-val" id="stat-questions">—</div>
+          <div class="score-lbl">Questions</div>
+        </div>
+        <div class="score-tile">
+          <div class="score-val" id="stat-time">—:——</div>
+          <div class="score-lbl">Time left</div>
+        </div>
+      </div>
+
+      <div class="reveal-card">
+        <div class="reveal-eyebrow">Who you were looking for</div>
+        <div id="reveal-looking-for"></div>
+      </div>
+
+      <div class="reveal-card">
+        <div class="reveal-eyebrow">What they had on you</div>
+        <div id="reveal-had-on-you"></div>
+      </div>
+
+      <button class="btn-primary" style="margin-bottom:12px;" onclick="showFeedbackSheet()">Leave feedback</button>
+
+      <div id="submit-status" style="font-size:11px;color:#6b6b68;font-family:'JetBrains Mono',monospace;text-align:center;margin-top:10px;display:none;"></div>
+    </div>
+
+    <div class="contact-popup" id="feedback-popup">
+      <div class="contact-popup-sheet">
+        <div class="contact-popup-handle"></div>
+        <div class="contact-popup-title">How did it go?</div>
+        <div class="contact-popup-body">Any friction, confusion, or moments that stood out?</div>
+        <textarea id="feedback-text" placeholder="Write anything..." style="width:100%;min-height:100px;background:#0D0D0B;border:1px solid #2a2a28;border-radius:10px;padding:12px;color:#F0EDE8;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;resize:none;outline:none;margin-bottom:12px;"></textarea>
+        <button class="btn-primary" onclick="submitRoundData()">Submit feedback</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- SCREEN NAV (outside phone, below) — set display:none for live, remove to re-enable in dev -->
+<div style="display:none; gap:10px; margin-top:24px; align-items:center;">
+  <button onclick="goTo(currentScreen-1)" style="background:none;border:1px solid #2a2a28;color:#6b6b68;padding:8px 16px;border-radius:8px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:13px;">← Prev</button>
+  <span id="screen-counter" style="color:#3d3d3b;font-size:13px;font-family:'JetBrains Mono',monospace;">Screen 1 of 15</span>
+  <button onclick="goTo(currentScreen+1)" style="background:none;border:1px solid #2a2a28;color:#6b6b68;padding:8px 16px;border-radius:8px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:13px;">Next →</button>
+</div>
+
+<script>
+  let currentScreen = 7;
+
+  const TAKEN = ['ghost_in_the_crowd', 'shadow', 'burned', 'finder', 'scout'];
+
+  let uState = 'empty';
+
+  function handleUsername(val) {
+    const display  = document.getElementById('u-display');
+    const hint     = document.getElementById('u-hint');
+    const icon     = document.getElementById('u-icon');
+    const counter  = document.getElementById('u-counter');
+
+    counter.textContent = val.length + ' / 20';
+
+    if (!val) {
+      display.innerHTML = '<span style="color:#2a2a28;">ghost_in_the_crowd</span>';
+      display.style.borderColor = '#2a2a28';
+      hint.style.color = '#3d3d3b';
+      hint.textContent = 'Letters, numbers and underscores only. 3–20 characters.';
+      icon.style.opacity = '0';
+      uState = 'empty';
+      checkS3Continue();
+      return;
+    }
+
+    const validPattern = /^[a-z0-9_]+$/;
+    const isValidChars = validPattern.test(val);
+    const isValidLen   = val.length >= 3 && val.length <= 20;
+    const isTaken      = TAKEN.includes(val.toLowerCase());
+
+    if (!isValidChars) {
+      let html = '';
+      for (const ch of val) {
+        if (/[a-z0-9_]/.test(ch)) {
+          html += `<span style="color:#F0EDE8;">${ch}</span>`;
+        } else {
+          html += `<span style="color:#C8521A;">${ch}</span>`;
+        }
+      }
+      display.innerHTML = html;
+      display.style.borderColor = 'rgba(200,82,26,0.4)';
+      hint.style.color = '#C8521A';
+      hint.textContent = 'Letters, numbers and underscores only.';
+      icon.textContent = '';
+      icon.style.opacity = '1';
+      uState = 'invalid';
+    } else if (!isValidLen) {
+      display.innerHTML = `<span style="color:#F0EDE8;">${val}</span>`;
+      display.style.borderColor = 'rgba(200,82,26,0.25)';
+      hint.style.color = '#C8521A';
+      hint.textContent = val.length < 3 ? 'Too short — minimum 3 characters.' : 'Too long — maximum 20 characters.';
+      icon.textContent = '';
+      icon.style.opacity = '1';
+      uState = 'invalid';
+    } else if (isTaken) {
+      display.innerHTML = `<span style="color:#e05555;">${val}</span>`;
+      display.style.borderColor = 'rgba(220,80,80,0.4)';
+      hint.style.color = '#e05555';
+      hint.textContent = 'That username is already taken.';
+      icon.textContent = '✕';
+      icon.style.color = '#e05555';
+      icon.style.opacity = '1';
+      uState = 'taken';
+    } else {
+      display.innerHTML = `<span style="color:#F0EDE8;">${val}</span>`;
+      display.style.borderColor = 'rgba(200,82,26,0.4)';
+      hint.style.color = '#6b6b68';
+      hint.textContent = 'Looks good.';
+      icon.textContent = '✓';
+      icon.style.color = '#C8521A';
+      icon.style.opacity = '1';
+      uState = 'valid';
+    }
+
+    checkS3Continue();
+  }
+
+  function checkS3Continue() {
+    const email = document.getElementById('email-input');
+    const btn   = document.getElementById('s3-continue');
+    const emailOk = email && email.value.includes('@') && email.value.includes('.');
+    btn.disabled = !(uState === 'valid' && emailOk);
+  }
+
+  const FORM_ACTION = 'https://docs.google.com/forms/d/e/1FAIpQLSfTi9WxjSZWpZpP9A66pK3GhstV2YHm0W-yXz7Z97yPzYetow/formResponse';
+  const FORM_FIELDS = {
+    roomCode:    'entry.1381299483',
+    seekerSig:   'entry.528579969',
+    targetSig:   'entry.867543988',
+    desc1:       'entry.1393415776',
+    desc2:       'entry.1735089927',
+    desc3:       'entry.1599405652',
+    desc4:       'entry.323409640',
+    timeLeft:    'entry.244962749',
+    outcome:     'entry.526488891',
+    feedback:    'entry.1684752566',
+  };
+
+  let roundOutcome = '';
+  let roundTimeLeftSnapshot = '';
+  let myQuestionCount = 0;
+  let oppQuestionsAboutMe = []; // { question, answer } for questions I answered
+  let iWasSeeker = false;
+
+  function getRoundData() {
+    return {
+      roomCode:  (document.getElementById('room-code-input') || {}).value || '',
+      seekerSig: seekerSignal ? seekerSignal.label : '',
+      targetSig: targetSignal ? targetSignal.label : '',
+      desc1:     (document.getElementById('d1') || {}).value || '',
+      desc2:     (document.getElementById('d2') || {}).value || '',
+      desc3:     (document.getElementById('d3') || {}).value || '',
+      desc4:     '',
+      timeLeft:  roundTimeLeftSnapshot,
+      outcome:   roundOutcome,
+      feedback:  '',
+    };
+  }
+
+  function submitToForm(data) {
+    const body = new URLSearchParams();
+    body.append(FORM_FIELDS.roomCode,  data.roomCode);
+    body.append(FORM_FIELDS.seekerSig, data.seekerSig);
+    body.append(FORM_FIELDS.targetSig, data.targetSig);
+    body.append(FORM_FIELDS.desc1,     data.desc1);
+    body.append(FORM_FIELDS.desc2,     data.desc2);
+    body.append(FORM_FIELDS.desc3,     data.desc3);
+    body.append(FORM_FIELDS.desc4,     data.desc4);
+    body.append(FORM_FIELDS.timeLeft,  data.timeLeft);
+    body.append(FORM_FIELDS.outcome,   data.outcome);
+    body.append(FORM_FIELDS.feedback,  data.feedback);
+    return fetch(FORM_ACTION, { method: 'POST', mode: 'no-cors', body });
+  }
+
+  function showStatus(msg) {
+    const el = document.getElementById('submit-status');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  function showFeedbackSheet() {
+    document.getElementById('feedback-text').value = '';
+    document.getElementById('feedback-popup').classList.add('visible');
+  }
+
+  function hideFeedbackSheet() {
+    document.getElementById('feedback-popup').classList.remove('visible');
+  }
+
+  function submitRoundData() {
+    const data = getRoundData();
+    data.feedback = (document.getElementById('feedback-text') || {}).value || '';
+    submitToForm(data).then(() => {
+      hideFeedbackSheet();
+      showStatus('Feedback sent. Thanks.');
+    }).catch(() => showStatus('Something went wrong — try again.'));
+  }
+
+  function pushRoundData() {
+    const data = getRoundData();
+    submitToForm(data).then(() => {
+      showStatus('Round data sent.');
+    }).catch(() => showStatus('Something went wrong — try again.'));
+  }
+
+  const SIGNALS = [
+    { cls: 'sprite-point-up',      label: 'One finger up' },
+    { cls: 'sprite-peace',         label: 'Peace sign' },
+    { cls: 'sprite-fingers-cross', label: 'Fingers crossed' },
+    { cls: 'sprite-double-guns',   label: 'Double guns' },
+    { cls: 'sprite-raised-fist',   label: 'Raised fist' },
+    { cls: 'sprite-ok',            label: 'OK sign' },
+    { cls: 'sprite-finger-gun',    label: 'Finger gun' },
+    { cls: 'sprite-victory',       label: 'Victory hand' },
+    { cls: 'sprite-listening',     label: 'Listening' },
+    { cls: 'sprite-binoculars',    label: 'Binoculars' },
+  ];
+
+  let seekerSignal = SIGNALS[1]; // default: peace
+  let targetSignal = SIGNALS[0]; // default: point up
+
+  function assignSignals() {
+    const shuffled = [...SIGNALS].sort(() => Math.random() - 0.5);
+    seekerSignal = shuffled[0];
+    targetSignal = shuffled[1];
+  }
+
+  function applySignalClass(el, sig) {
+    SIGNALS.forEach(s => el.classList.remove(s.cls));
+    el.classList.add(sig.cls);
+  }
+
+  function renderSignals() {
+    const seekerIcon    = document.getElementById('seeker-signal-icon');
+    const seekerLabel   = document.getElementById('seeker-signal-label');
+    const targetIcon    = document.getElementById('target-signal-icon');
+    const targetLabel   = document.getElementById('target-signal-label');
+    const popupIcon     = document.getElementById('popup-target-signal-icon');
+    const popupS12Icon  = document.getElementById('popup-s12-signal-icon');
+
+    applySignalClass(seekerIcon, seekerSignal);
+    seekerLabel.textContent = seekerSignal.label;
+    applySignalClass(targetIcon, targetSignal);
+    targetLabel.textContent = targetSignal.label;
+    applySignalClass(popupIcon, targetSignal);
+    applySignalClass(popupS12Icon, targetSignal);
+  }
+
+  function goTo(n) {
+    if (n === 8) n = currentScreen < 8 ? 9 : 7; // s8 reserved — skip forward to 9, back to 7
+    if (n < 1 || n > 15) return;
+    // leaving an active round without a proper exit — clean up Firebase
+    if (n <= 7 && roundListenersStarted && roomRef) fbLeaveRoom();
+    document.getElementById('s' + currentScreen).classList.remove('active');
+    currentScreen = n;
+    document.getElementById('s' + currentScreen).classList.add('active');
+    document.getElementById('screen-counter').textContent = 'Screen ' + n + ' of 14';
+    if (n === 11) {
+      if (lockedDescriptors && lockedDescriptors.length >= 3) {
+        buildHintLines(lockedDescriptors);
+      } else {
+        const ids = ['d1','d2','d3'];
+        const descs = ids.map(id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; }).filter(Boolean);
+        buildHintLines(descs.length === 3 ? descs : ['red knit jumper', 'dark curly hair', 'black tote bag']);
+      }
+      fbStartHintCountdown();
+    }
+    if (n === 12 && !roundListenersStarted) {
+      roundListenersStarted = true;
+      // clear profile card DOM from any previous round
+      const cardBody = document.getElementById('desc-card-body');
+      if (cardBody) cardBody.innerHTML = '<div style="font-size:12px;color:#3d3d3b;padding:8px 0;font-family:\'JetBrains Mono\',monospace;">Ask questions to build your profile.</div>';
+      fbSyncSignals();
+      fbStartTimer();
+      fbListenForLock();
+      fbListenOutcome();
+      fbInitTurn();
+    }
+    if (n === 13) { buildLockinCard(); }
+    if (n === 14) { stopQuestionTimer(); renderSignals(); }
+    if (n === 15) { buildRoundSummary(); }
+  }
+
+  function selectAge(val) {
+    ['age18','age13'].forEach(id => document.getElementById(id).classList.remove('selected'));
+    const map = { '18': 'age18', '13': 'age13' };
+    if (map[val]) document.getElementById(map[val]).classList.add('selected');
+
+    const consent = document.getElementById('consent-notice');
+    const defaultNotice = document.getElementById('age-notice-default');
+    const btn = document.getElementById('age-verify-btn');
+
+    if (val === '13') {
+      consent.style.display = 'block';
+      defaultNotice.style.display = 'none';
+    } else {
+      consent.style.display = 'none';
+      defaultNotice.style.display = 'block';
+    }
+
+    btn.disabled = false;
+  }
+
+  function selectContact(val) {
+    ['c1','c2'].forEach(id => document.getElementById(id).classList.remove('selected'));
+    document.getElementById(val === 'approach' ? 'c1' : 'c2').classList.add('selected');
+  }
+
+  let roundSheetOpen = false;
+  function toggleRoundSheet() {
+    const sheet = document.getElementById('round-sheet');
+    roundSheetOpen = !roundSheetOpen;
+    sheet.style.opacity = roundSheetOpen ? '1' : '0';
+    sheet.style.pointerEvents = roundSheetOpen ? 'all' : 'none';
+    if (!roundSheetOpen) {
+      const input = document.getElementById('room-code-input');
+      if (input) { input.value = ''; }
+      const btn = document.getElementById('room-code-btn');
+      if (btn) { btn.disabled = true; }
+    }
+  }
+
+  function handleRoomCode(val) {
+    const btn = document.getElementById('room-code-btn');
+    btn.disabled = val.trim().length < 3;
+  }
+
+  function fbConfirmRoom() {
+    const raw = document.getElementById('room-code-input').value;
+    const btn = document.getElementById('room-code-btn');
+    btn.disabled = true;
+    btn.textContent = 'Joining...';
+    fbJoinRoomV2(raw, () => {
+      toggleRoundSheet();
+      goTo(9);
+      fbWaitForBothPlayers();
+    }, (msg) => {
+      btn.disabled = false;
+      btn.textContent = 'Confirm — let\'s go';
+      alert(msg);
+    });
+  }
+
+  function fbWaitForBothPlayers() {
+    const overlay = document.getElementById('s9-waiting');
+    // show overlay until opponent joins
+    overlay.style.display = 'flex';
+    roomRef.child('players/' + oppId + '/joined').on('value', snap => {
+      if (snap.val() === true) {
+        roomRef.child('players/' + oppId + '/joined').off('value');
+        overlay.style.display = 'none';
+      }
+    });
+  }
+
+  let sheetOpen = false;
+  function toggleSheet() {
+    const sheet = document.getElementById('home-sheet');
+    sheetOpen = !sheetOpen;
+    sheet.style.opacity = sheetOpen ? '1' : '0';
+    sheet.style.pointerEvents = sheetOpen ? 'all' : 'none';
+  }
+
+  function dismissNotif() {
+    const n = document.getElementById('friend-notif');
+    n.style.transform = 'translateY(120px)';
+    n.style.opacity = '0';
+  }
+
+  function triggerNotif() { /* removed */ }
+
+  // ---- SONAR CANVAS ----
+  function initSonar() {
+    const canvas = document.getElementById('sonar-canvas');
+    if (!canvas) return;
+    const wrap   = canvas.parentElement;
+    const W      = wrap.offsetWidth;
+    const H      = wrap.offsetHeight;
+    canvas.width  = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    const cx   = W / 2;
+    const cy   = H;        // origin at bottom edge — arc rises from below
+    const maxR = W * 1.3;  // arc travels well up into the screen
+
+    // blips placed so dist from (cx,cy) <= maxR
+    const blips = [
+      { fx: 0.18, fy: 0.22, size: 2.2, ember: false, alpha: 0 },
+      { fx: 0.80, fy: 0.18, size: 2.2, ember: false, alpha: 0 },
+      { fx: 0.10, fy: 0.52, size: 2.5, ember: false, alpha: 0 },
+      { fx: 0.78, fy: 0.48, size: 2.2, ember: false, alpha: 0 },
+      { fx: 0.42, fy: 0.35, size: 3.8, ember: true,  alpha: 0.08 },
+      { fx: 0.90, fy: 0.70, size: 2.0, ember: false, alpha: 0 },
+      { fx: 0.24, fy: 0.72, size: 2.2, ember: false, alpha: 0 },
+      { fx: 0.60, fy: 0.15, size: 2.0, ember: false, alpha: 0 },
+    ];
+
+    const rings = [];
+    let lastRingTime = -3200;
+    const RING_INTERVAL = 3200;
+    const FADE = 0.006;
+    let lastTime = null;
+
+    function draw(ts) {
+      if (!lastTime) lastTime = ts;
+      const dt = Math.min(ts - lastTime, 50);
+      lastTime = ts;
+
+      ctx.clearRect(0, 0, W, H);
+
+      // reference rings intentionally hidden
+
+      // vertical centre line only
+      ctx.globalAlpha = 0.04;
+      ctx.strokeStyle = 'rgba(200,82,26,1)';
+      ctx.lineWidth = 0.5;
+      ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, H); ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      // spawn ring with ripple offsets
+      if (ts - lastRingTime > RING_INTERVAL) {
+        const pts = 180;
+        rings.push({ r: 0, offsets: Array.from({length: pts}, () => (Math.random() - 0.5) * 4) });
+        lastRingTime = ts;
+      }
+
+      // fade blips
+      blips.forEach(b => {
+        b.alpha = Math.max(b.alpha - FADE, 0);
+      });
+
+      // draw + update rings
+      const N = 180;
+      const ringSpeed = maxR / 3400;
+      for (let i = rings.length - 1; i >= 0; i--) {
+        const ring = rings[i];
+        ring.r += dt * ringSpeed;
+        const progress  = ring.r / maxR;
+        const ringAlpha = Math.max(0, 0.45 * (1 - progress * 1.1));
+        const amp = (1 - ring.r / maxR) * 1.0;
+
+        function ripplePath() {
+          ctx.beginPath();
+          for (let j = 0; j <= N; j++) {
+            const angle = (j / N) * Math.PI * 2;
+            const r2 = ring.r + ring.offsets[j % N] * amp;
+            const rx = cx + r2 * Math.cos(angle);
+            const ry = cy + r2 * Math.sin(angle);
+            j === 0 ? ctx.moveTo(rx, ry) : ctx.lineTo(rx, ry);
+          }
+          ctx.closePath();
+        }
+
+        if (ringAlpha > 0) {
+          ripplePath();
+          ctx.strokeStyle = `rgba(200,82,26,${ringAlpha * 0.5})`;
+          ctx.lineWidth = 10;
+          ctx.stroke();
+          ripplePath();
+          ctx.strokeStyle = `rgba(200,82,26,${ringAlpha * 1.0})`;
+          ctx.lineWidth = 1.4;
+          ctx.stroke();
+        }
+
+        blips.forEach(b => {
+          const bx   = b.fx * W;
+          const by   = b.fy * H;
+          const dist = Math.sqrt((bx - cx) ** 2 + (by - cy) ** 2);
+          if (Math.abs(ring.r - dist) < dt * ringSpeed * 2 + 4) b.alpha = 1;
+        });
+
+        if (ring.r > maxR) rings.splice(i, 1);
+      }
+
+      // draw blips as squares
+      blips.forEach(b => {
+        if (b.alpha < 0.01) return;
+        const px = b.fx * W;
+        const py = b.fy * H;
+        const s  = b.size;
+        ctx.save();
+        ctx.globalAlpha = b.alpha;
+        if (b.ember) {
+          ctx.shadowColor = 'rgba(251,80,18,0.5)';
+          ctx.shadowBlur  = 4;
+          ctx.fillStyle   = '#fb5012';
+          ctx.fillRect(px - s, py - s, s * 2, s * 2);
+          ctx.shadowBlur  = 0;
+          ctx.globalAlpha = b.alpha * 0.9;
+          ctx.fillStyle   = '#ffaa80';
+          ctx.fillRect(px - s * 0.42, py - s * 0.42, s * 0.84, s * 0.84);
+        } else {
+          ctx.fillStyle = 'rgba(240,237,232,0.8)';
+          ctx.fillRect(px - s / 2, py - s / 2, s, s);
+        }
+        ctx.restore();
+      });
+
+      requestAnimationFrame(draw);
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  let sonarStarted = false;
+  const _goToWithSonar = goTo;
+  window.goTo = function(n) {
+    _goToWithSonar(n);
+    if (n === 7 && !sonarStarted) {
+      sonarStarted = true;
+      setTimeout(initSonar, 60);
+    }
+  };
+
+  function handleZoneInput(val) {
+    const btn  = document.getElementById('zone-btn');
+    const icon = document.getElementById('zone-icon');
+    const hint = document.getElementById('zone-hint');
+    if (val.trim().length >= 3) {
+      btn.disabled = false;
+      icon.style.opacity = '1';
+      hint.style.color = '#6b6b68';
+      hint.textContent = 'Looks good — confirming with your opponent.';
+    } else {
+      btn.disabled = true;
+      icon.style.opacity = '0';
+      hint.style.color = '#3d3d3b';
+      hint.textContent = 'Spelling doesn\'t have to be exact.';
+    }
+  }
+  let isYourTurn = true;
+
+  const CATEGORIES = {
+    clothing: ['jumper','shirt','top','dress','jeans','trousers','skirt','shorts','jacket','coat','hoodie','vest','cardigan','sweater'],
+    hair:     ['hair','curly','straight','wavy','blonde','brunette','red','black','grey','bun','ponytail','shaved','short','long'],
+    accessories: ['bag','tote','backpack','glasses','sunglasses','watch','hat','cap','scarf','headphones','earrings','necklace','lanyard'],
+    colour:   ['red','green','blue','black','white','grey','yellow','orange','pink','purple','navy','brown','beige','cream','dark','light'],
+    outerwear:['jacket','coat','puffer','parka','trench','hoodie','raincoat','windbreaker','blazer','overcoat'],
+  };
+
+  // stores descriptors for screen 11
+  let lockedDescriptors = [];
+
+  function updateCount() {
+    const ids = ['d1','d2','d3'];
+    let filled = ids.filter(id => document.getElementById(id).value.trim().length > 0).length;
+    document.getElementById('d-count').textContent = filled;
+
+    const vals = ids.map(id => document.getElementById(id).value.trim());
+    const prev = document.getElementById('hint-preview');
+    if (filled === 3) {
+      const preview = vals.map(v => {
+        const words = v.split(/\s+/).filter(Boolean);
+        const hiddenIdx = Math.floor(Math.random() * words.length);
+        return words.map((w, i) => i === hiddenIdx ? '????' : w).join(' ');
+      }).join(' · ');
+      prev.innerHTML = 'Your opponent will receive: <span>' + preview + '</span>';
+    } else {
+      prev.innerHTML = 'Your opponent will receive: <span>fill in all three descriptors to preview.</span>';
+    }
+
+    document.getElementById('lock-btn').disabled = filled < 3;
+  }
+
+  // scramble animation for hint words on screen 11
+  const SCRAMBLE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+  function scrambleWord(el, finalWord, delay) {
+    const len = finalWord.length;
+    // scramble indefinitely — word stays hidden
+    const iv = setInterval(() => {
+      el.textContent = Array.from({length: len}, () =>
+        SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)]
+      ).join('');
+    }, 80);
+    el._scrambleInterval = iv;
+  }
+
+  function buildHintLines(descriptors) {
+    // clear all three lines
+    for (let i = 1; i <= 3; i++) {
+      const el = document.getElementById('hint-line-' + i);
+      if (el) el.innerHTML = '';
+    }
+    // pick one descriptor at random
+    const desc = descriptors[Math.floor(Math.random() * descriptors.length)];
+    const words = desc.split(/\s+/).filter(Boolean);
+    // pick one word to reveal; scramble the rest
+    const revealIdx = Math.floor(Math.random() * words.length);
+    const el = document.getElementById('hint-line-1');
+    if (!el) return;
+    words.forEach((word, wi) => {
+      if (wi > 0) el.appendChild(document.createTextNode(' '));
+      const span = document.createElement('span');
+      if (wi === revealIdx) {
+        span.textContent = word;
+        span.style.color = '#F0EDE8';
+      } else {
+        span.style.color = '#C8521A';
+        el.appendChild(span);
+        scrambleWord(span, word, 300 + wi * 200);
+        return;
+      }
+      el.appendChild(span);
+    });
+  }
+
+  const LIBRARY = [
+    'is','are','does','do','your','they','their','target','wearing','have','has',
+    'a','an','the','on','in','with','any','something','nothing','colour','color',
+    'jacket','coat','jumper','shirt','top','dress','jeans','trousers','skirt','shorts',
+    'hoodie','vest','cardigan','sweater','puffer','blazer','suit','tie',
+    'hair','curly','straight','wavy','blonde','brunette','dark','light','black','grey',
+    'long','short','tied','up','down','bun','ponytail',
+    'bag','tote','backpack','glasses','sunglasses','watch','hat','cap','scarf',
+    'headphones','earrings','necklace','jewellery','lanyard','umbrella',
+    'red','green','blue','white','yellow','orange','pink','purple','navy','brown',
+    'beige','cream','grey','gray','patterned','striped','plain',
+    'outerwear','footwear','shoes','boots','trainers','sneakers','heels','sandals',
+    'visible','noticeable','bright','bold','large','small','carrying','holding',
+    'around','their','neck','wrist','shoulder','table','floor','hand',
+    'of','or','and','not','no','yes','than','more','than','open','closed',
+  ];
+
+  function handleQInput(val) {
+    const sendBtn = document.getElementById('send-btn');
+    const err = document.getElementById('q-error');
+    const len = val.trim().length;
+    sendBtn.disabled = len < 6;
+    if (err) {
+      if (len > 0 && len < 6) {
+        err.textContent = 'Question too short — keep typing.';
+        err.style.opacity = '1';
+      } else {
+        err.style.opacity = '0';
+      }
+    }
+  }
+
+  function appendAnswer(question, answer) {
+    const body = document.getElementById('desc-card-body');
+    if (!body) return;
+    // remove placeholder text on first entry
+    const placeholder = body.querySelector('div');
+    if (placeholder && placeholder.style.color === 'rgb(61, 61, 59)') placeholder.remove();
+
+    const isBonus = answer === 'yes' && lockedDescriptors.length > 0 && !questionMatchesDescriptor(question, lockedDescriptors);
+    const row = document.createElement('div');
+    row.className = 'qa-row ' + answer + (isBonus ? ' bonus' : '');
+    row.innerHTML = '<span class="qa-question">' + question + '</span><span class="qa-badge">' + (isBonus ? '+' : answer === 'yes' ? 'Yes' : 'No') + '</span>';
+    body.appendChild(row);
+
+  }
+
+  function buildLockinCard() {
+    const card = document.getElementById('lockin-card');
+    if (!card) return;
+    card.innerHTML = '';
+
+    // Q&A rows from the profile card — confirmed yes, bonus yes, then no
+    const qaRows = Array.from(document.querySelectorAll('#desc-card-body .qa-row'));
+    const yesRows   = qaRows.filter(r => r.classList.contains('yes') && !r.classList.contains('bonus'));
+    const bonusRows = qaRows.filter(r => r.classList.contains('yes') && r.classList.contains('bonus'));
+    const noRows    = qaRows.filter(r => r.classList.contains('no'));
+    [...yesRows, ...bonusRows, ...noRows].forEach(row => {
+      const q = row.querySelector('.qa-question');
+      const isYes   = row.classList.contains('yes') && !row.classList.contains('bonus');
+      const isBonus = row.classList.contains('bonus');
+      const line = document.createElement('div');
+      if (isYes)        line.style.cssText = 'font-size:13px;line-height:1.8;padding:2px 0;color:#F0EDE8;';
+      else if (isBonus) line.style.cssText = 'font-size:13px;line-height:1.8;padding:2px 0;color:rgba(200,82,26,0.55);';
+      else              line.style.cssText = 'font-size:13px;line-height:1.8;padding:2px 0;color:#3d3d3b;text-decoration:line-through;';
+      line.textContent = (isBonus ? '+ ' : '') + (q ? q.textContent : '');
+      card.appendChild(line);
+    });
+
+    if (card.children.length === 0) {
+      card.innerHTML = '<div style="font-size:12px;color:#3d3d3b;padding:8px 0;font-family:\'JetBrains Mono\',monospace;">No profile data yet.</div>';
+    }
+  }
+
+  function questionMatchesDescriptor(question, descriptors) {
+    const q = question.toLowerCase();
+    return descriptors.some(desc => {
+      if (!desc) return false;
+      return desc.toLowerCase().split(/\s+/).filter(w => w.length > 3).some(w => q.includes(w));
+    });
+  }
+
+  function descriptorMatchQA(descriptor, qaLog) {
+    const words = descriptor.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+    for (const { question, answer } of qaLog) {
+      const q = question.toLowerCase();
+      if (words.some(w => q.includes(w))) return answer;
+    }
+    return null;
+  }
+
+  function buildRevealCard(container, descriptors, qaLog) {
+    container.innerHTML = '';
+    if (!descriptors || descriptors.length === 0) {
+      container.innerHTML = '<div style="font-size:12px;color:#3d3d3b;padding:4px 0;">No data.</div>';
+      return;
+    }
+    const confirmed = [], missed = [], wrong = [];
+    descriptors.forEach(desc => {
+      if (!desc) return;
+      const match = descriptorMatchQA(desc, qaLog);
+      if (match === 'yes') confirmed.push(desc);
+      else if (match === 'no') wrong.push(desc);
+      else missed.push(desc);
+    });
+
+    // bonus yes: yes answers in qaLog that don't match any descriptor
+    const bonusYes = qaLog
+      .filter(({ answer }) => answer === 'yes')
+      .filter(({ question }) => !questionMatchesDescriptor(question, descriptors))
+      .map(({ question }) => question);
+
+    // render: confirmed → bonus yes → never asked → wrong
+    confirmed.forEach(desc => {
+      const div = document.createElement('div');
+      div.className = 'reveal-line confirmed';
+      div.textContent = desc + ' ✓';
+      container.appendChild(div);
+    });
+    bonusYes.forEach(q => {
+      const div = document.createElement('div');
+      div.className = 'reveal-line';
+      div.style.cssText = 'color:rgba(200,82,26,0.55);font-size:13px;line-height:1.6;padding:2px 0;';
+      div.textContent = '+ ' + q;
+      container.appendChild(div);
+    });
+    missed.forEach(desc => {
+      const div = document.createElement('div');
+      div.className = 'reveal-line missed';
+      div.textContent = desc + ' — never asked';
+      container.appendChild(div);
+    });
+    wrong.forEach(desc => {
+      const div = document.createElement('div');
+      div.style.cssText = 'color:#3d3d3b;text-decoration:line-through;font-size:13px;line-height:1.6;padding:2px 0;';
+      div.textContent = desc;
+      container.appendChild(div);
+    });
+  }
+
+  function buildRoundSummary() {
+    // win / loss pill
+    const badge = document.getElementById('result-badge');
+    if (badge) {
+      if (iWasSeeker) {
+        badge.className = 'result-badge win';
+        badge.innerHTML = '&#x2713;&nbsp;&nbsp;You found them';
+      } else {
+        badge.className = 'result-badge loss';
+        badge.textContent = "You've been burned.";
+      }
+    }
+
+    // questions asked
+    const qEl = document.getElementById('stat-questions');
+    if (qEl) qEl.textContent = myQuestionCount;
+
+    // time remaining
+    const tEl = document.getElementById('stat-time');
+    if (tEl) {
+      const m = Math.floor(roundSecondsLeft / 60);
+      const s = roundSecondsLeft % 60;
+      tEl.textContent = m + ':' + String(s).padStart(2, '0');
+    }
+
+    // "who you were looking for" — opponent's descriptors styled by my Q&A
+    const myQALog = [];
+    document.querySelectorAll('#desc-card-body .qa-row').forEach(row => {
+      const q = row.querySelector('.qa-question');
+      if (q) myQALog.push({ question: q.textContent, answer: row.classList.contains('yes') ? 'yes' : 'no' });
+    });
+    buildRevealCard(document.getElementById('reveal-looking-for'), lockedDescriptors || [], myQALog);
+
+    // "what they had on you" — my descriptors styled by opponent's Q&A
+    const myDescs = ['d1','d2','d3'].map(id => {
+      const el = document.getElementById(id);
+      return el ? el.value.trim() : '';
+    }).filter(Boolean);
+    buildRevealCard(document.getElementById('reveal-had-on-you'), myDescs, oppQuestionsAboutMe);
+  }
+
+  function submitQuestion() {
+    const input = document.getElementById('q-input');
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    handleQInput('');
+    myQuestionCount++;
+    stopQuestionTimer();
+    waitingForAnswer = true;
+    setTurn(false); // close input locally while waiting for opponent's answer
+    if (roomRef && text) {
+      roomRef.child('round/currentQuestion').set({ text, from: myId });
+    }
+    // turn stays mine in Firebase until opponent answers
+  }
+
+  function answerQuestion(answer) {
+    document.getElementById('their-q-box').style.display = 'none';
+    const q = document.getElementById('their-q-text').textContent.replace(/^"|"$/g, '');
+    oppQuestionsAboutMe.push({ question: q, answer });
+    if (roomRef) {
+      roomRef.child('round/answers').push({ question: q, answer, asker: oppId });
+    }
+    // turn change is handled by the asker's child_added listener once answer arrives
+  }
+
+  // shared round timer across screens 12, 13, 14
+  let roundSecondsLeft = 15 * 60;
+  let roundTimerInterval = null;
+  let roundListenersStarted = false;
+
+  function formatTime(s) {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+  }
+
+  function updateTimerDisplays() {
+    const t = formatTime(roundSecondsLeft);
+    ['timer-s4', 'timer-s13', 'timer-s14'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = t;
+    });
+  }
+
+  function startRoundTimer() {
+    if (roundTimerInterval) return;
+    roundTimerInterval = setInterval(() => {
+      if (roundSecondsLeft > 0) {
+        roundSecondsLeft--;
+        updateTimerDisplays();
+      } else {
+        clearInterval(roundTimerInterval);
+      }
+    }, 1000);
+  }
+
+  // ── QUESTION TIMER ────────────────────────────────────────────────────────
+  let questionTimerInterval = null;
+  const QUESTION_SECS = 45;
+
+  function startQuestionTimer() {
+    stopQuestionTimer();
+    let secs = QUESTION_SECS;
+    const timerEl = document.getElementById('q-timer');
+    const wrap    = document.getElementById('q-input-wrap');
+    function tick() {
+      if (timerEl) timerEl.textContent = '0:' + String(secs).padStart(2, '0');
+      if (secs <= 5) {
+        if (timerEl) timerEl.classList.add('urgent');
+        const card = document.getElementById('desc-card');
+        if (card)    card.classList.add('urgent');
+      }
+      if (secs <= 0) { questionTimerExpired(); return; }
+      secs--;
+      questionTimerInterval = setTimeout(tick, 1000);
+    }
+    tick();
+  }
+
+  function stopQuestionTimer() {
+    if (questionTimerInterval) { clearTimeout(questionTimerInterval); questionTimerInterval = null; }
+    const timerEl = document.getElementById('q-timer');
+    const card    = document.getElementById('desc-card');
+    if (timerEl) { timerEl.classList.remove('urgent'); timerEl.textContent = '0:45'; }
+    if (card)    card.classList.remove('urgent');
+  }
+
+  function questionTimerExpired() {
+    stopQuestionTimer();
+    if (currentScreen === 13) goTo(12);
+    setTurn(false);
+    if (roomRef) roomRef.child('round/turn').set(oppId);
+  }
+
+  function setTurn(yours) {
+    isYourTurn = yours;
+    const ext     = document.getElementById('q-ext');
+    const card    = document.getElementById('desc-card');
+    const lblYour = document.getElementById('lbl-your');
+    const lblTheir = document.getElementById('lbl-their');
+
+    const lockinBtn = document.getElementById('lockin-btn');
+    if (yours) {
+      ext.classList.add('open');
+      card.classList.add('your-turn');
+      lblYour.classList.add('active');
+      lblTheir.classList.remove('active');
+      startQuestionTimer();
+      if (lockinBtn) { lockinBtn.disabled = false; lockinBtn.classList.remove('inactive'); }
+      const timerEl2 = document.getElementById('q-timer');
+      if (timerEl2) timerEl2.style.visibility = 'visible';
+    } else {
+      ext.classList.remove('open');
+      card.classList.remove('your-turn');
+      lblYour.classList.remove('active');
+      lblTheir.classList.add('active');
+      stopQuestionTimer();
+      if (lockinBtn) { lockinBtn.disabled = true; lockinBtn.classList.add('inactive'); }
+      const timerEl2 = document.getElementById('q-timer');
+      if (timerEl2) timerEl2.style.visibility = 'hidden';
+    }
+  }
+
+  function toggleTurn() { setTurn(!isYourTurn); }
+
+  function showPopup() {
+    const p = document.getElementById('contact-popup');
+    p.classList.add('visible');
+  }
+
+  function dismissPopup() {
+    const p = document.getElementById('contact-popup');
+    p.classList.remove('visible');
+  }
+
+  let evadeCountdownInterval = null;
+  const EVADE_DELAY = 15;
+
+  function showTargetPopup() {
+    renderSignals();
+    document.getElementById('target-popup-s12').classList.add('visible');
+    startEvadeCountdown();
+  }
+
+  function startEvadeCountdown() {
+    clearInterval(evadeCountdownInterval);
+    const btn = document.getElementById('evade-btn');
+    if (!btn) return;
+    btn.disabled = true;
+    btn.style.cursor = 'not-allowed';
+    btn.style.color = '#3d3d3b';
+    let secs = EVADE_DELAY;
+    btn.textContent = 'Not me (' + secs + 's)';
+    evadeCountdownInterval = setInterval(() => {
+      secs--;
+      if (secs <= 0) {
+        clearInterval(evadeCountdownInterval);
+        evadeCountdownInterval = null;
+        btn.disabled = false;
+        btn.style.cursor = 'pointer';
+        btn.style.color = '#6b6b68';
+        btn.textContent = 'Not me';
+      } else {
+        btn.textContent = 'Not me (' + secs + 's)';
+      }
+    }, 1000);
+  }
+
+  function dismissTargetPopupS12() {
+    clearInterval(evadeCountdownInterval);
+    evadeCountdownInterval = null;
+    const btn = document.getElementById('evade-btn');
+    if (btn) { btn.disabled = true; btn.style.cursor = 'not-allowed'; btn.style.color = '#3d3d3b'; btn.textContent = 'Not me (15s)'; }
+    document.getElementById('target-popup-s12').classList.remove('visible');
+  }
+
+  // kept for s14 popup (seeker side)
+  function dismissTargetPopup() {
+    document.getElementById('target-popup').classList.remove('visible');
+  }
+
+  // ---- FIREBASE ----
+  const firebaseConfig = {
+    apiKey:            'AIzaSyAht1y2pIt_gEXlUQEwtOyYEKFhXHZ-Tms',
+    authDomain:        'burned-prototype.firebaseapp.com',
+    databaseURL:       'https://burned-prototype-default-rtdb.asia-southeast1.firebasedatabase.app',
+    projectId:         'burned-prototype',
+    storageBucket:     'burned-prototype.firebasestorage.app',
+    messagingSenderId: '1063131985005',
+    appId:             '1:1063131985005:web:597b93d821fa7b43537b64',
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // per-session state
+  let myId       = null;   // 'player1' | 'player2'
+  let oppId      = null;
+  let roomKey    = null;   // normalised room code used as DB key
+  let roomRef    = null;
+  let timerRef   = null;
+  let lockedListener = null;
+
+  function normCode(raw) {
+    return raw.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+  }
+
+  // ── JOIN ROOM ──────────────────────────────────────────────────────────────
+  function fbJoinRoom(raw, onSuccess, onError) {
+    roomKey = normCode(raw);
+    roomRef = db.ref('rooms/' + roomKey);
+
+    roomRef.transaction(room => {
+      if (room === null) {
+        // create room as player1
+        return {
+          players: { player1: { joined: true, ready: false } },
+          round:   { lockedBy: null, outcome: null, phase: 'joining' },
+        };
+      }
+      if (!room.players) room.players = {};
+      if (!room.players.player2) {
+        room.players.player2 = { joined: true, ready: false };
+        return room;
+      }
+      return; // abort — room full
+    }, (err, committed, snap) => {
+      if (err || !committed) { onError('Room is full or unavailable.'); return; }
+      const data = snap.val();
+      const slots = data.players;
+      myId  = slots.player2 && !slots.player2.joined ? 'player2'
+            : (Object.keys(slots).length === 1 ? 'player1' : 'player2');
+      // derive from transaction result
+      myId  = (data.players.player2 && data.players.player1) ? 'player2' : 'player1';
+      // safer: whichever slot we just wrote
+      myId  = snap.child('players/player2').exists() &&
+              snap.child('players/player1').exists() &&
+              !snap.child('players/player2/ready').val() &&
+               snap.child('players/player1/ready').val() === false
+              ? 'player2' : 'player1';
+      oppId = myId === 'player1' ? 'player2' : 'player1';
+      onSuccess();
+    });
+  }
+
+  // Cleaner slot detection — read once after transaction
+  function fbJoinRoomV2(raw, onSuccess, onError) {
+    roomKey = normCode(raw);
+    roomRef = db.ref('rooms/' + roomKey);
+    const p1ref = roomRef.child('players/player1');
+    const p2ref = roomRef.child('players/player2');
+
+    p1ref.transaction(val => {
+      if (val === null) return { joined: true, ready: false };
+      return; // already taken
+    }, (err, committed) => {
+      if (!err && committed) {
+        myId = 'player1'; oppId = 'player2';
+        roomRef.child('round').set({ lockedBy: null, outcome: null, phase: 'joining' });
+        fbRegisterPresence();
+        onSuccess(); return;
+      }
+      // try player2
+      p2ref.transaction(val => {
+        if (val === null) return { joined: true, ready: false };
+        return;
+      }, (err2, committed2) => {
+        if (!err2 && committed2) {
+          myId = 'player2'; oppId = 'player1';
+          fbRegisterPresence();
+          onSuccess();
+        } else {
+          onError('Room is full. Try a different code.');
+        }
+      });
+    });
+  }
+
+  // ── DESCRIPTOR SUBMISSION (s9 → s10) ──────────────────────────────────────
+  function fbSubmitDescriptors() {
+    if (!roomRef) { goTo(10); return; }
+    const vals = ['d1','d2','d3'].map(id => document.getElementById(id).value.trim());
+    roomRef.child('players/' + myId).update({ descriptors: vals, ready: true });
+    goTo(10);
+    // wait for opponent ready → advance to s11
+    roomRef.child('players/' + oppId + '/ready').on('value', snap => {
+      if (snap.val() !== true) return;
+      roomRef.child('players/' + oppId + '/ready').off('value');
+      roomRef.child('players/' + oppId + '/descriptors').once('value', dsnap => {
+        lockedDescriptors = dsnap.val() || [];
+        goTo(11);
+      });
+    });
+  }
+
+  // ── PRESENCE / DISCONNECTION ──────────────────────────────────────────────
+  function fbRegisterPresence() {
+    const connRef = roomRef.child('players/' + myId + '/connected');
+    connRef.onDisconnect().set(false);
+    connRef.set(true);
+    // listen for opponent disconnect — only act during an active round
+    roomRef.child('players/' + oppId + '/connected').on('value', snap => {
+      if (!roundListenersStarted) return;
+      const popup = document.getElementById('disconnection-popup');
+      if (snap.val() === false) {
+        // pause timers
+        if (roundTimerInterval)    { clearInterval(roundTimerInterval); roundTimerInterval = null; }
+        stopQuestionTimer();
+        if (popup) popup.classList.add('visible');
+      } else if (snap.val() === true) {
+        // opponent returned — resume round timer and dismiss popup
+        if (popup) popup.classList.remove('visible');
+        if (!roundTimerInterval) {
+          roundTimerInterval = setInterval(() => {
+            if (roundSecondsLeft > 0) { roundSecondsLeft--; updateTimerDisplays(); }
+            else { clearInterval(roundTimerInterval); roundTimerInterval = null; fbLeaveRoom(); goTo(7); }
+          }, 1000);
+        }
+        if (isYourTurn) startQuestionTimer();
+      }
+    });
+  }
+
+  // ── SIGNAL SYNC (s12) ─────────────────────────────────────────────────────
+  function fbSyncSignals() {
+    if (!roomRef) return;
+    if (myId === 'player1') {
+      assignSignals();
+      roomRef.child('signals').set({
+        seekerCls:   seekerSignal.cls,
+        seekerLabel: seekerSignal.label,
+        targetCls:   targetSignal.cls,
+        targetLabel: targetSignal.label,
+      });
+    } else {
+      const sigRef = roomRef.child('signals');
+      const sigHandler = sigRef.on('value', snap => {
+        const s = snap.val();
+        if (!s) return; // wait until player1 writes
+        seekerSignal = { cls: s.seekerCls, label: s.seekerLabel };
+        targetSignal = { cls: s.targetCls, label: s.targetLabel };
+        sigRef.off('value', sigHandler);
+      });
+    }
+  }
+
+  // ── TIMER SYNC (s12) ──────────────────────────────────────────────────────
+  function fbStartTimer() {
+    if (!roomRef) { startRoundTimer(); return; }
+    if (myId === 'player1') {
+      roomRef.child('timer/startedAt').set(firebase.database.ServerValue.TIMESTAMP);
+    }
+    timerRef = roomRef.child('timer/startedAt');
+    timerRef.on('value', snap => {
+      const startedAt = snap.val();
+      if (!startedAt) return;
+      timerRef.off('value');
+      const DURATION = 15 * 60;
+      const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+      roundSecondsLeft = Math.max(0, DURATION - elapsed);
+      if (roundTimerInterval) clearInterval(roundTimerInterval);
+      roundTimerInterval = setInterval(() => {
+        if (roundSecondsLeft > 0) {
+          roundSecondsLeft--;
+          updateTimerDisplays();
+        } else {
+          clearInterval(roundTimerInterval);
+          roundTimerInterval = null;
+          fbLeaveRoom();
+          goTo(7);
+        }
+      }, 1000);
+    });
+  }
+
+  // ── HINT COUNTDOWN ────────────────────────────────────────────────────────
+  function fbStartHintCountdown() {
+    if (!roomRef) {
+      // solo testing — just count down locally
+      runHintCountdown(Date.now());
+      return;
+    }
+    // mark this player as ready on hint screen
+    roomRef.child('players/' + myId + '/atHint').set(true);
+
+    // player1 watches for both players ready, then writes the start timestamp
+    if (myId === 'player1') {
+      roomRef.child('players/' + oppId + '/atHint').on('value', snap => {
+        if (snap.val() !== true) return;
+        roomRef.child('players/' + oppId + '/atHint').off('value');
+        roomRef.child('round/countdownAt').set(firebase.database.ServerValue.TIMESTAMP);
+      });
+    }
+
+    // both players listen for the timestamp and run the countdown
+    roomRef.child('round/countdownAt').on('value', snap => {
+      if (!snap.val()) return;
+      roomRef.child('round/countdownAt').off('value');
+      runHintCountdown(snap.val());
+    });
+  }
+
+  function runHintCountdown(startedAt) {
+    const el = document.getElementById('hint-countdown');
+    const SECS = 10;
+    function tick() {
+      const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+      const left = SECS - elapsed;
+      if (left <= 0) {
+        if (el) el.textContent = 'Round starting...';
+        goTo(12);
+        return;
+      }
+      if (el) el.textContent = 'Round starts in ' + left + '...';
+      setTimeout(tick, 200);
+    }
+    tick();
+  }
+
+  // ── TURN SYNC ─────────────────────────────────────────────────────────────
+  let waitingForAnswer = false;
+
+  function fbInitTurn() {
+    if (!roomRef) { setTurn(true); return; }
+    if (myId === 'player1') {
+      roomRef.child('round/turn').set('player1');
+    }
+    // turn = who asks next; only changes when an answer is submitted
+    roomRef.child('round/turn').on('value', snap => {
+      const whose = snap.val();
+      if (!whose) return;
+      setTurn(whose === myId && !waitingForAnswer);
+    });
+    // answer arrives on the asker's device → show it, then pass turn to the answerer
+    roomRef.child('round/answers').on('child_added', snap => {
+      const data = snap.val();
+      if (!data || data.asker !== myId) return;
+      waitingForAnswer = false;
+      appendAnswer(data.question, data.answer);
+      // asker passes the turn to the answerer now that answer is confirmed
+      roomRef.child('round/turn').set(oppId);
+    });
+    // show question popup only on the opponent's device
+    roomRef.child('round/currentQuestion').on('value', snap => {
+      const data = snap.val();
+      if (!data || !data.text || data.from === myId) return;
+      const el = document.getElementById('their-q-text');
+      const box = document.getElementById('their-q-box');
+      if (!el || !box) return;
+      el.textContent = '”' + data.text + '”';
+      box.style.display = 'block';
+    });
+  }
+
+  // ── LOCK MECHANIC ─────────────────────────────────────────────────────────
+  let isLocked = false;
+
+  function fbLockIn() {
+    if (!roomRef) { goTo(14); return; }
+    roomRef.child('round/lockedBy').transaction(val => {
+      if (val === null) return myId;
+      return; // already locked by opponent — abort
+    }, (err, committed) => {
+      if (committed) {
+        isLocked = true;
+        iWasSeeker = true;
+        goTo(14);
+      } else {
+        // opponent already locked — can't lock in
+        alert('Your opponent has already locked in. Wait for the signal exchange.');
+      }
+    });
+  }
+
+  function fbEvade() {
+    dismissTargetPopupS12();
+    document.getElementById('their-q-box').style.display = 'none';
+    if (!roomRef) { goTo(12); return; }
+    // clear stale question so the listener doesn't re-show it on return to s12
+    roomRef.child('round/currentQuestion').set(null);
+    // clear the lock and give this player (the evader) next turn
+    roomRef.child('round/lockedBy').set(null);
+    roomRef.child('round/turn').set(myId);
+  }
+
+  function fbListenForLock() {
+    if (!roomRef) return;
+    if (lockedListener) roomRef.child('round/lockedBy').off('value', lockedListener);
+    lockedListener = roomRef.child('round/lockedBy').on('value', snap => {
+      const lockedBy = snap.val();
+      if (lockedBy && lockedBy !== myId) {
+        // opponent locked in — show target popup wherever we are
+        if (currentScreen === 12) showTargetPopup();
+        if (currentScreen === 13) { showTargetPopup(); goTo(12); }
+      }
+      if (!lockedBy && currentScreen === 14 && iWasSeeker) {
+        // target evaded — return to round, reset seeker state
+        iWasSeeker = false;
+        isLocked = false;
+        waitingForAnswer = false; // in case they locked in mid-question
+        goTo(12);
+      }
+    });
+  }
+
+  // ── OUTCOME SYNC ──────────────────────────────────────────────────────────
+  function fbWriteOutcome(outcome) {
+    roundOutcome = outcome;
+    const _m = Math.floor(roundSecondsLeft / 60);
+    const _s = roundSecondsLeft % 60;
+    roundTimeLeftSnapshot = _m + ':' + String(_s).padStart(2, '0');
+    if (roomRef) roomRef.child('round').update({ outcome, timeLeft: roundTimeLeftSnapshot });
+    goTo(15);
+  }
+
+  function fbListenOutcome() {
+    if (!roomRef) return;
+    roomRef.child('round/outcome').on('value', snap => {
+      const outcome = snap.val();
+      if (outcome && currentScreen !== 15) {
+        roundOutcome = outcome;
+        roomRef.child('round/timeLeft').once('value', tSnap => {
+          if (tSnap.val()) roundTimeLeftSnapshot = tSnap.val();
+          goTo(15);
+        });
+      }
+    });
+  }
+
+  // ── CLEANUP on leave ──────────────────────────────────────────────────────
+  function fbLeaveRoom() {
+    if (roundTimerInterval) { clearInterval(roundTimerInterval); roundTimerInterval = null; }
+    stopQuestionTimer();
+    if (lockedListener && roomRef) roomRef.child('round/lockedBy').off('value', lockedListener);
+    if (roomRef && oppId) roomRef.child('players/' + oppId + '/connected').off('value');
+    const popup = document.getElementById('disconnection-popup');
+    if (popup) popup.classList.remove('visible');
+    if (roomRef) roomRef.remove(); // wipe room so code can be reused
+    roomRef = null; roomKey = null; myId = null; oppId = null; isLocked = false;
+    lockedDescriptors = [];
+    roundSecondsLeft = 15 * 60;
+    roundListenersStarted = false;
+    myQuestionCount = 0;
+    oppQuestionsAboutMe = [];
+    iWasSeeker = false;
+    waitingForAnswer = false;
+    roundTimeLeftSnapshot = '';
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // move disconnection popup to body so it isn't clipped by .phone overflow:hidden
+    const discPopup = document.getElementById('disconnection-popup');
+    if (discPopup) document.body.appendChild(discPopup);
+
+    const ta = document.getElementById('q-input');
+    if (ta) {
+      ta.addEventListener('input', () => handleQInput(ta.value));
+    }
+    setTurn(true);
+    document.getElementById('screen-counter').textContent = 'Screen ' + currentScreen + ' of 14';
+    // start sonar immediately since we open on s7
+    setTimeout(initSonar, 60);
+    sonarStarted = true;
+  });
+
+
+  // ---- SCREEN 1 DECRYPT ANIMATION ----
+  (function() {
+    const BURNED         = 'Burned';
+    const CHARS          = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*<>?/|[]{}';
+    const CHAR_MS        = 100;
+    const SCRAMBLE_SPEED = 69;
+    const SCRAMBLE_DUR   = 3000;
+    const RESOLVE_SPEED  = 130;
+
+    const orange     = document.getElementById('s1-orange');
+    const cursor     = document.getElementById('s1-cursor');
+
+    let typeTimer    = null;
+    let scrambleTmr  = null;
+    let slots        = new Array(6).fill('');
+    let active       = new Array(6).fill(false);
+    let resolved     = new Array(6).fill(false);
+
+    function rand() { return CHARS[Math.floor(Math.random() * CHARS.length)]; }
+
+    function render() {
+      let t = '';
+      for (let i = 0; i < 6; i++) { if (active[i]) t += slots[i]; }
+      orange.textContent  = t;
+      orange.dataset.text = t;
+    }
+
+    function startScramble() {
+      scrambleTmr = setInterval(() => {
+        for (let i = 0; i < 6; i++) {
+          if (active[i] && !resolved[i]) slots[i] = rand();
+        }
+        render();
+      }, SCRAMBLE_SPEED);
+    }
+
+    function resolveLetters() {
+      let idx = 0;
+      function next() {
+        if (idx >= 6) {
+          clearInterval(scrambleTmr);
+          cursor.classList.add('idle');
+          return;
+        }
+        resolved[idx] = true;
+        slots[idx]    = BURNED[idx];
+        render();
+        idx++;
+        typeTimer = setTimeout(next, RESOLVE_SPEED);
+      }
+      next();
+    }
+
+    function openSlots(idx) {
+      if (idx === 0) startScramble();
+      if (idx >= 6) { setTimeout(resolveLetters, SCRAMBLE_DUR); return; }
+      active[idx] = true;
+      slots[idx]  = rand();
+      render();
+      typeTimer = setTimeout(() => openSlots(idx + 1), CHAR_MS);
+    }
+
+    // start after a short pause so the screen is visible first
+    setTimeout(() => openSlots(0), 400);
+  })();
+</script>
+</body>
+</html>
