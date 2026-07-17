@@ -1132,13 +1132,50 @@
   }
   .q-timer.urgent { color: #C8521A; }
 
-  @keyframes card-flash {
-    0%, 100% { border-color: rgba(200,82,26,0.7); box-shadow: 0 0 0 1px rgba(200,82,26,0.25); }
-    50%       { border-color: rgba(200,82,26,0.15); box-shadow: none; }
+  /* ── Your turn popup ── */
+  .your-turn-popup {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: #111110;
+    border-top: 1px solid #2a2a28;
+    border-radius: 20px 20px 0 0;
+    padding: 12px 20px 32px;
+    z-index: 20;
+    transform: translateY(100%);
+    transition: transform 0.38s cubic-bezier(0.22,1,0.36,1);
   }
-  .desc-card.urgent {
-    animation: card-flash 1s step-end infinite;
+  .your-turn-popup.open { transform: translateY(0); }
+  .your-turn-handle {
+    width: 36px; height: 3px;
+    background: #2a2a28; border-radius: 3px;
+    margin: 0 auto 16px;
   }
+  .your-turn-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .your-turn-label {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #6b6b68;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .your-turn-timer {
+    font-size: 28px;
+    font-family: 'JetBrains Mono', monospace;
+    color: #F0EDE8;
+    letter-spacing: 0.02em;
+    transition: color 0.2s;
+  }
+  .your-turn-timer.urgent { color: #C8521A; }
+  @keyframes timer-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+  }
+  .your-turn-timer.urgent { animation: timer-pulse 1s step-end infinite; }
 
   .desc-card-body {
     padding: 14px 16px;
@@ -2296,24 +2333,11 @@
       <div class="desc-card your-turn" id="desc-card" style="margin-top:10px;">
         <div class="desc-card-header">
           <span class="desc-card-title">Target profile</span>
-          <span class="q-timer" id="q-timer">0:25</span>
         </div>
         <div class="desc-card-body" id="desc-card-body">
           <div style="font-size:12px;color:#3d3d3b;padding:8px 0;font-family:'JetBrains Mono',monospace;">Ask questions to build your profile.</div>
         </div>
 
-        <div class="q-extension" id="q-ext">
-          <div class="q-extension-inner">
-            <div class="q-hint">Ask about appearance only — clothing, hair, accessories.</div>
-            <div class="q-input-wrap" id="q-input-wrap">
-              <textarea class="q-real-input" id="q-input" rows="2"
-                oninput="handleQInput(this.value)"
-                placeholder="Type your question..."></textarea>
-            </div>
-            <div id="q-error" style="font-size:11px;color:#C8521A;font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;margin-bottom:8px;min-height:14px;opacity:0;transition:opacity 0.2s;"></div>
-            <button class="btn-primary" id="send-btn" style="padding:12px;" disabled onclick="submitQuestion()">Send question</button>
-          </div>
-        </div>
       </div>
 
       <div class="their-question" id="their-q-box" style="display:none;">
@@ -2327,6 +2351,26 @@
 
       <div style="position:absolute;bottom:90px;left:28px;right:28px;z-index:2;">
         <button class="btn-lockin" id="lockin-btn" onclick="goTo(13)" disabled><span>Lock in →</span></button>
+      </div>
+
+      <!-- Your turn popup -->
+      <div class="your-turn-popup" id="your-turn-popup">
+        <div class="your-turn-handle"></div>
+        <div class="your-turn-header">
+          <span class="your-turn-label">Your turn</span>
+          <span class="your-turn-timer" id="your-turn-timer">0:45</span>
+        </div>
+        <div class="q-input-wrap" id="q-input-wrap" style="margin-bottom:8px;">
+          <textarea class="q-real-input" id="q-input" rows="2"
+            oninput="handleQInput(this.value)"
+            maxlength="40"
+            placeholder="Type your question..."></textarea>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;min-height:14px;">
+          <div id="q-error" style="font-size:11px;color:#C8521A;font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;opacity:0;transition:opacity 0.2s;"></div>
+          <div id="q-counter" style="font-size:11px;font-family:'JetBrains Mono',monospace;color:#3d3d3b;transition:color 0.2s;">40</div>
+        </div>
+        <button class="btn-primary" id="send-btn" onclick="submitQuestion()" disabled>Send question</button>
       </div>
 
     </div>
@@ -3100,13 +3144,28 @@
     'of','or','and','not','no','yes','than','more','than','open','closed',
   ];
 
+  const Q_MAX = 40;
+  const Q_MIN = 6;
+
   function handleQInput(val) {
     const sendBtn = document.getElementById('send-btn');
-    const err = document.getElementById('q-error');
+    const err     = document.getElementById('q-error');
+    const counter = document.getElementById('q-counter');
+    const input   = document.getElementById('q-input');
+    // enforce hard cap
+    if (val.length > Q_MAX) {
+      input.value = val.slice(0, Q_MAX);
+      val = input.value;
+    }
     const len = val.trim().length;
-    sendBtn.disabled = len < 6;
+    const remaining = Q_MAX - val.length;
+    if (counter) {
+      counter.textContent = remaining;
+      counter.style.color = remaining <= 8 ? '#C8521A' : '#3d3d3b';
+    }
+    sendBtn.disabled = len < Q_MIN;
     if (err) {
-      if (len > 0 && len < 6) {
+      if (len > 0 && len < Q_MIN) {
         err.textContent = 'Question too short — keep typing.';
         err.style.opacity = '1';
       } else {
@@ -3328,14 +3387,13 @@
   function startQuestionTimer() {
     stopQuestionTimer();
     let secs = QUESTION_SECS;
-    const timerEl = document.getElementById('q-timer');
-    const wrap    = document.getElementById('q-input-wrap');
+    const timerEl = document.getElementById('your-turn-timer');
     function tick() {
-      if (timerEl) timerEl.textContent = '0:' + String(secs).padStart(2, '0');
+      const mm = Math.floor(secs / 60);
+      const ss = String(secs % 60).padStart(2, '0');
+      if (timerEl) timerEl.textContent = mm + ':' + ss;
       if (secs <= 5) {
         if (timerEl) timerEl.classList.add('urgent');
-        const card = document.getElementById('desc-card');
-        if (card)    card.classList.add('urgent');
       }
       if (secs <= 0) { questionTimerExpired(); return; }
       secs--;
@@ -3346,10 +3404,8 @@
 
   function stopQuestionTimer() {
     if (questionTimerInterval) { clearTimeout(questionTimerInterval); questionTimerInterval = null; }
-    const timerEl = document.getElementById('q-timer');
-    const card    = document.getElementById('desc-card');
+    const timerEl = document.getElementById('your-turn-timer');
     if (timerEl) { timerEl.classList.remove('urgent'); timerEl.textContent = '0:45'; }
-    if (card)    card.classList.remove('urgent');
   }
 
   function questionTimerExpired() {
@@ -3361,30 +3417,26 @@
 
   function setTurn(yours) {
     isYourTurn = yours;
-    const ext     = document.getElementById('q-ext');
+    const popup   = document.getElementById('your-turn-popup');
     const card    = document.getElementById('desc-card');
     const lblYour = document.getElementById('lbl-your');
     const lblTheir = document.getElementById('lbl-their');
-
     const lockinBtn = document.getElementById('lockin-btn');
+
     if (yours) {
-      ext.classList.add('open');
-      card.classList.add('your-turn');
+      if (popup) { popup.classList.add('open'); setTimeout(() => { const i = document.getElementById('q-input'); if(i) i.focus(); }, 400); }
+      if (card) card.classList.add('your-turn');
       lblYour.classList.add('active');
       lblTheir.classList.remove('active');
       startQuestionTimer();
       if (lockinBtn) { lockinBtn.disabled = false; lockinBtn.classList.remove('inactive'); }
-      const timerEl2 = document.getElementById('q-timer');
-      if (timerEl2) timerEl2.style.visibility = 'visible';
     } else {
-      ext.classList.remove('open');
-      card.classList.remove('your-turn');
+      if (popup) { popup.classList.remove('open'); const i = document.getElementById('q-input'); if(i) { i.value = ''; handleQInput(''); } }
+      if (card) card.classList.remove('your-turn');
       lblYour.classList.remove('active');
       lblTheir.classList.add('active');
       stopQuestionTimer();
       if (lockinBtn) { lockinBtn.disabled = true; lockinBtn.classList.add('inactive'); }
-      const timerEl2 = document.getElementById('q-timer');
-      if (timerEl2) timerEl2.style.visibility = 'hidden';
     }
   }
 
@@ -3651,17 +3703,19 @@
 
     // player1 watches for both players ready, then writes the start timestamp
     if (myId === 'player1') {
-      roomRef.child('players/' + oppId + '/atHint').on('value', snap => {
+      const oppHintRef = roomRef.child('players/' + oppId + '/atHint');
+      const oppHintHandler = oppHintRef.on('value', snap => {
         if (snap.val() !== true) return;
-        roomRef.child('players/' + oppId + '/atHint').off('value');
+        oppHintRef.off('value', oppHintHandler);
         roomRef.child('round/countdownAt').set(firebase.database.ServerValue.TIMESTAMP);
       });
     }
 
-    // both players listen for the timestamp and run the countdown
-    roomRef.child('round/countdownAt').on('value', snap => {
+    // both players listen for the timestamp — keep listener on until value arrives
+    const cdRef = roomRef.child('round/countdownAt');
+    const cdHandler = cdRef.on('value', snap => {
       if (!snap.val()) return;
-      roomRef.child('round/countdownAt').off('value');
+      cdRef.off('value', cdHandler);
       runHintCountdown(snap.val());
     });
   }
