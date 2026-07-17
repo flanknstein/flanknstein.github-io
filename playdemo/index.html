@@ -1135,24 +1135,22 @@
   /* ── Your turn popup ── */
   .your-turn-popup {
     position: absolute;
-    bottom: 0; left: 0; right: 0;
+    top: 0; left: 0; right: 0;
     background: #111110;
-    border-top: 1px solid #2a2a28;
-    border-radius: 20px 20px 0 0;
-    padding: 12px 20px 32px;
+    border-bottom: 1px solid #2a2a28;
+    border-radius: 0 0 20px 20px;
+    padding: 32px 20px 20px;
     z-index: 20;
-    transform: translateY(100%);
+    transform: translateY(-100%);
     transition: transform 0.38s cubic-bezier(0.22,1,0.36,1);
   }
   .your-turn-popup.open { transform: translateY(0); }
   .your-turn-handle {
-    width: 36px; height: 3px;
-    background: #2a2a28; border-radius: 3px;
-    margin: 0 auto 16px;
+    display: none;
   }
   .your-turn-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     margin-bottom: 14px;
   }
@@ -2355,9 +2353,7 @@
 
       <!-- Your turn popup -->
       <div class="your-turn-popup" id="your-turn-popup">
-        <div class="your-turn-handle"></div>
         <div class="your-turn-header">
-          <span class="your-turn-label">Your turn</span>
           <span class="your-turn-timer" id="your-turn-timer">0:45</span>
         </div>
         <div class="q-input-wrap" id="q-input-wrap" style="margin-bottom:8px;">
