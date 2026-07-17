@@ -3612,6 +3612,8 @@
   }
 
   // ── PRESENCE / DISCONNECTION ──────────────────────────────────────────────
+  let disconnectDebounce = null;
+
   function fbRegisterPresence() {
     const connRef = roomRef.child('players/' + myId + '/connected');
     connRef.onDisconnect().set(false);
@@ -3621,12 +3623,18 @@
       if (!roundListenersStarted) return;
       const popup = document.getElementById('disconnection-popup');
       if (snap.val() === false) {
-        // pause timers
-        if (roundTimerInterval)    { clearInterval(roundTimerInterval); roundTimerInterval = null; }
-        stopQuestionTimer();
-        if (popup) popup.classList.add('visible');
+        // wait 4s before acting — brief network blips should self-resolve
+        if (!disconnectDebounce) {
+          disconnectDebounce = setTimeout(() => {
+            disconnectDebounce = null;
+            if (roundTimerInterval) { clearInterval(roundTimerInterval); roundTimerInterval = null; }
+            stopQuestionTimer();
+            if (popup) popup.classList.add('visible');
+          }, 4000);
+        }
       } else if (snap.val() === true) {
-        // opponent returned — resume round timer and dismiss popup
+        // opponent back (or blip resolved) — cancel pending popup and resume
+        if (disconnectDebounce) { clearTimeout(disconnectDebounce); disconnectDebounce = null; }
         if (popup) popup.classList.remove('visible');
         if (!roundTimerInterval) {
           roundTimerInterval = setInterval(() => {
