@@ -2351,24 +2351,24 @@
         <button class="btn-lockin" id="lockin-btn" onclick="goTo(13)" disabled><span>Lock in →</span></button>
       </div>
 
-      <!-- Your turn popup -->
-      <div class="your-turn-popup" id="your-turn-popup">
-        <div class="your-turn-header">
-          <span class="your-turn-timer" id="your-turn-timer">0:45</span>
-        </div>
-        <div class="q-input-wrap" id="q-input-wrap" style="margin-bottom:8px;">
-          <textarea class="q-real-input" id="q-input" rows="2"
-            oninput="handleQInput(this.value)"
-            maxlength="40"
-            placeholder="Type your question..."></textarea>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;min-height:14px;">
-          <div id="q-error" style="font-size:11px;color:#C8521A;font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;opacity:0;transition:opacity 0.2s;"></div>
-          <div id="q-counter" style="font-size:11px;font-family:'JetBrains Mono',monospace;color:#3d3d3b;transition:color 0.2s;">40</div>
-        </div>
-        <button class="btn-primary" id="send-btn" onclick="submitQuestion()" disabled>Send question</button>
-      </div>
+    </div>
 
+    <!-- Your turn popup — direct child of screen so top:0 anchors to screen edge -->
+    <div class="your-turn-popup" id="your-turn-popup">
+      <div class="your-turn-header">
+        <span class="your-turn-timer" id="your-turn-timer">0:45</span>
+      </div>
+      <div class="q-input-wrap" id="q-input-wrap" style="margin-bottom:8px;">
+        <textarea class="q-real-input" id="q-input" rows="2"
+          oninput="handleQInput(this.value)"
+          maxlength="40"
+          placeholder="Type your question..."></textarea>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;min-height:14px;">
+        <div id="q-error" style="font-size:11px;color:#C8521A;font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;opacity:0;transition:opacity 0.2s;"></div>
+        <div id="q-counter" style="font-size:11px;font-family:'JetBrains Mono',monospace;color:#3d3d3b;transition:color 0.2s;">40</div>
+      </div>
+      <button class="btn-primary" id="send-btn" onclick="submitQuestion()" disabled>Send question</button>
     </div>
 
     <!-- Target popup accessible from active round -->
@@ -3612,7 +3612,17 @@
 
   function fbRegisterPresence() {
     const connRef = roomRef.child('players/' + myId + '/connected');
-    connRef.onDisconnect().set(false);
+    // Re-assert connected=true and resync timer every time the socket reconnects
+    firebase.database().ref('.info/connected').on('value', snap => {
+      if (snap.val() === true) {
+        connRef.onDisconnect().set(false);
+        connRef.set(true);
+        // Resync our own round timer after a reconnect gap
+        if (roundListenersStarted && !roundTimerInterval) {
+          resyncRoundTimer();
+        }
+      }
+    });
     connRef.set(true);
     // listen for opponent disconnect — only act during an active round
     roomRef.child('players/' + oppId + '/connected').on('value', snap => {
@@ -3632,12 +3642,7 @@
         // opponent back (or blip resolved) — cancel pending popup and resume
         if (disconnectDebounce) { clearTimeout(disconnectDebounce); disconnectDebounce = null; }
         if (popup) popup.classList.remove('visible');
-        if (!roundTimerInterval) {
-          roundTimerInterval = setInterval(() => {
-            if (roundSecondsLeft > 0) { roundSecondsLeft--; updateTimerDisplays(); }
-            else { clearInterval(roundTimerInterval); roundTimerInterval = null; fbLeaveRoom(); goTo(7); }
-          }, 1000);
-        }
+        if (!roundTimerInterval) resyncRoundTimer();
         if (isYourTurn) startQuestionTimer();
       }
     });
@@ -3667,8 +3672,38 @@
   }
 
   // ── TIMER SYNC (s12) ──────────────────────────────────────────────────────
+  function _runRoundInterval() {
+    if (roundTimerInterval) clearInterval(roundTimerInterval);
+    roundTimerInterval = setInterval(() => {
+      if (roundSecondsLeft > 0) {
+        roundSecondsLeft--;
+        updateTimerDisplays();
+      } else {
+        clearInterval(roundTimerInterval);
+        roundTimerInterval = null;
+        fbLeaveRoom();
+        goTo(7);
+      }
+    }, 1000);
+  }
+
+  // Re-read startedAt from Firebase and correct roundSecondsLeft before resuming.
+  // Safe to call on initial start, reconnect, or screen-lock resume.
+  function resyncRoundTimer() {
+    if (!roomRef) { _runRoundInterval(); return; }
+    roomRef.child('timer/startedAt').once('value', snap => {
+      const startedAt = snap.val();
+      if (startedAt) {
+        const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+        roundSecondsLeft = Math.max(0, 15 * 60 - elapsed);
+        updateTimerDisplays();
+      }
+      _runRoundInterval();
+    });
+  }
+
   function fbStartTimer() {
-    if (!roomRef) { startRoundTimer(); return; }
+    if (!roomRef) { _runRoundInterval(); return; }
     if (myId === 'player1') {
       roomRef.child('timer/startedAt').set(firebase.database.ServerValue.TIMESTAMP);
     }
@@ -3677,21 +3712,10 @@
       const startedAt = snap.val();
       if (!startedAt) return;
       timerRef.off('value');
-      const DURATION = 15 * 60;
       const elapsed = Math.floor((Date.now() - startedAt) / 1000);
-      roundSecondsLeft = Math.max(0, DURATION - elapsed);
-      if (roundTimerInterval) clearInterval(roundTimerInterval);
-      roundTimerInterval = setInterval(() => {
-        if (roundSecondsLeft > 0) {
-          roundSecondsLeft--;
-          updateTimerDisplays();
-        } else {
-          clearInterval(roundTimerInterval);
-          roundTimerInterval = null;
-          fbLeaveRoom();
-          goTo(7);
-        }
-      }, 1000);
+      roundSecondsLeft = Math.max(0, 15 * 60 - elapsed);
+      updateTimerDisplays();
+      _runRoundInterval();
     });
   }
 
