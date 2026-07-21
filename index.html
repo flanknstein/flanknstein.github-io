@@ -56,10 +56,10 @@
   .scan-label {
     position: absolute;
     top: 28px;
-    right: 32px;
+    right: 24px;
     z-index: 5;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
+    font-size: 12px;
     letter-spacing: 0.12em;
     color: rgba(200,82,26,0.45);
     text-transform: uppercase;
@@ -75,6 +75,7 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
+    width: min(400px, 88vw);
   }
 
   /* ── Main typing line — no glitch here ── */
@@ -84,7 +85,7 @@
 
   .type-display {
     font-family: 'JetBrains Mono', monospace;
-    font-size: clamp(26px, 5.5vw, 48px);
+    font-size: clamp(28px, 7.5vw, 52px);
     font-weight: 400;
     letter-spacing: -0.5px;
     line-height: 1;
@@ -232,7 +233,7 @@
     bottom: 0;
     left: 50%;
     transform: translateX(-50%) translateY(100%);
-    width: min(680px, 92vw);
+    width: min(680px, 96vw);
     height: 52vh;
     background: #111110;
     border: 1px solid #2a2a28;
@@ -325,7 +326,7 @@
       </div>
     </div>
     <div class="coming-soon" id="coming-soon">Coming soon</div>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+    <div style="display:flex;flex-direction:column;gap:12px;width:100%;">
       <button class="btn-s" id="learn-btn" onclick="openSheet()">Learn more</button>
       <button class="btn-s" id="code-btn" onclick="openCodeModal()">I have a code</button>
     </div>
