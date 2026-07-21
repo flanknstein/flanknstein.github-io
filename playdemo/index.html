@@ -1922,7 +1922,7 @@
   <div class="glow-inner"></div>
 
   <!-- SCREEN 1 — SPLASH -->
-  <div class="screen active" id="s1">
+  <div class="screen" id="s1">
     <div class="s1-glow"></div>
     <div class="s1-content">
       <div class="s1-type-display">
@@ -2174,7 +2174,7 @@
   </div>
 
   <!-- SCREEN 7 — HOME -->
-  <div class="screen" id="s7">
+  <div class="screen active" id="s7">
 
     <div class="home-header" style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center;">
       <div class="home-profile" onclick="toggleSheet()" style="justify-self:start;">
@@ -2618,14 +2618,14 @@
 </div>
 
 <!-- SCREEN NAV (outside phone, below) — set display:none for live, remove to re-enable in dev -->
-<div style="display:flex; gap:10px; margin-top:24px; align-items:center;">
+<div style="display:none; gap:10px; margin-top:24px; align-items:center;">
   <button onclick="goTo(currentScreen-1)" style="background:none;border:1px solid #2a2a28;color:#6b6b68;padding:8px 16px;border-radius:8px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:13px;">← Prev</button>
   <span id="screen-counter" style="color:#3d3d3b;font-size:13px;font-family:'JetBrains Mono',monospace;">Screen 1 of 15</span>
   <button onclick="goTo(currentScreen+1)" style="background:none;border:1px solid #2a2a28;color:#6b6b68;padding:8px 16px;border-radius:8px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:13px;">Next →</button>
 </div>
 
 <script>
-  let currentScreen = 1;
+  let currentScreen = 7;
 
   const TAKEN = ['ghost_in_the_crowd', 'shadow', 'burned', 'finder', 'scout'];
 
