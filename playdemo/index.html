@@ -727,6 +727,18 @@
     z-index: 2;
   }
 
+  .s1-glow {
+    position: absolute;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 260px;
+    height: 260px;
+    background: radial-gradient(circle, rgba(200,82,26,0.13) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
   .hook {
     margin-bottom: 56px;
   }
@@ -1019,6 +1031,14 @@
     50%       { transform: scale(1.08); opacity: 0.5; }
   }
 
+  .waiting-dot-inline {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #C8521A;
+    animation: waiting-breathe 2.4s ease-in-out infinite;
+    margin-bottom: 4px;
+  }
+
   .waiting-dot {
     width: 8px; height: 8px;
     border-radius: 50%;
@@ -1133,34 +1153,48 @@
   .q-timer.urgent { color: #C8521A; }
 
   /* ── Your turn popup ── */
+  .your-turn-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(13,13,11,0.72);
+    z-index: 19;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease;
+  }
+  .your-turn-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
   .your-turn-popup {
     position: absolute;
-    top: 0; left: 0; right: 0;
+    left: 28px; right: 28px;
+    top: 50%;
+    transform: translateY(-50%) scale(0);
+    transform-origin: center center;
     background: #111110;
-    border-bottom: 1px solid #2a2a28;
-    border-radius: 0 0 20px 20px;
-    padding: 32px 20px 20px;
+    border: 1px solid #2a2a28;
+    border-radius: 16px;
+    padding: 20px;
     z-index: 20;
-    transform: translateY(-100%);
-    transition: transform 0.38s cubic-bezier(0.22,1,0.36,1);
+    opacity: 0;
+    transition:
+      transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1),
+      opacity   0.18s ease;
   }
-  .your-turn-popup.open { transform: translateY(0); }
-  .your-turn-handle {
-    display: none;
+  .your-turn-popup.open {
+    transform: translateY(-50%) scale(1);
+    opacity: 1;
   }
+  .your-turn-handle { display: none; }
   .your-turn-header {
     display: flex;
     justify-content: center;
     align-items: center;
     margin-bottom: 14px;
   }
-  .your-turn-label {
-    font-size: 10px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: #6b6b68;
-    font-family: 'JetBrains Mono', monospace;
-  }
+  .your-turn-label { display: none; }
   .your-turn-timer {
     font-size: 28px;
     font-family: 'JetBrains Mono', monospace;
@@ -1302,11 +1336,26 @@
     font-size: 11px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: #3d3d3b;
+    color: #2a2a28;
     font-family: 'JetBrains Mono', monospace;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .turn-label::before {
+    content: '';
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
   }
 
   .turn-label.active { color: #C8521A; }
+  .turn-label.active::before { opacity: 1; }
 
   .turn-divider {
     width: 1px; height: 10px;
@@ -1873,7 +1922,8 @@
   <div class="glow-inner"></div>
 
   <!-- SCREEN 1 — SPLASH -->
-  <div class="screen" id="s1">
+  <div class="screen active" id="s1">
+    <div class="s1-glow"></div>
     <div class="s1-content">
       <div class="s1-type-display">
         <span id="s1-orange" data-text=""></span><span class="s1-cursor" id="s1-cursor"></span>
@@ -1955,7 +2005,6 @@
       </div>
 
       <button class="btn-primary" id="s3-continue" onclick="goTo(4)" disabled>Continue</button>
-      <button class="btn-ghost" onclick="goTo(2)">Back</button>
     </div>
     <div class="progress" id="prog3">
       <div class="dot"></div>
@@ -2074,7 +2123,7 @@
 
   <!-- SCREEN 6 — HOW IT WORKS -->
   <div class="screen" id="s6">
-    <div class="screen-content" style="padding-top: 88px;">
+    <div class="screen-content" style="padding-top: 88px; overflow-y: auto; padding-bottom: 40px;">
       <div class="screen-label">The briefing</div>
       <div class="screen-title" style="margin-bottom: 28px;">Here's how it works.</div>
 
@@ -2125,7 +2174,7 @@
   </div>
 
   <!-- SCREEN 7 — HOME -->
-  <div class="screen active" id="s7">
+  <div class="screen" id="s7">
 
     <div class="home-header" style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center;">
       <div class="home-profile" onclick="toggleSheet()" style="justify-self:start;">
@@ -2246,6 +2295,7 @@
 
     <!-- waiting-for-opponent overlay -->
     <div id="s9-waiting" style="display:none;position:absolute;inset:0;z-index:30;background:#0D0D0B;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
+      <div class="waiting-dot-inline"></div>
       <div style="font-size:10px;letter-spacing:0.12em;color:#C8521A;text-transform:uppercase;font-family:'JetBrains Mono',monospace;">Waiting</div>
       <div style="font-size:18px;color:#F0EDE8;font-family:'JetBrains Mono',monospace;">Opponent joining...</div>
       <div style="font-size:12px;color:#3d3d3b;font-family:'JetBrains Mono',monospace;">The round begins once both players are in.</div>
@@ -2310,7 +2360,7 @@
       </div>
 
       <div class="screen-body" style="margin-bottom:28px;">One word per clue is hidden. Ask questions to fill in the gaps.</div>
-      <div id="hint-countdown" style="font-size:13px;color:#6b6b68;font-family:'JetBrains Mono',monospace;letter-spacing:0.08em;">Waiting for opponent...</div>
+      <div id="hint-countdown" style="font-size:22px;color:#C8521A;font-family:'JetBrains Mono',monospace;letter-spacing:0.08em;font-weight:400;margin-top:8px;">Waiting for opponent...</div>
     </div>
   </div>
 
@@ -2353,7 +2403,8 @@
 
     </div>
 
-    <!-- Your turn popup — direct child of screen so top:0 anchors to screen edge -->
+    <!-- Your turn backdrop + popup — centered in gap between card and lock-in -->
+    <div class="your-turn-backdrop" id="your-turn-backdrop"></div>
     <div class="your-turn-popup" id="your-turn-popup">
       <div class="your-turn-header">
         <span class="your-turn-timer" id="your-turn-timer">0:45</span>
@@ -2375,13 +2426,21 @@
     <div class="contact-popup" id="target-popup-s12">
       <div class="contact-popup-sheet">
         <div class="contact-popup-handle"></div>
-        <div class="signal-sprite sprite-point-up" id="popup-s12-signal-icon" style="margin:0 auto 12px;"></div>
-        <div class="contact-popup-title">Someone's found you.</div>
+        <div class="contact-popup-title" style="margin-bottom:16px;">Someone's found you.</div>
+        <div style="display:flex;gap:10px;margin-bottom:16px;">
+          <div style="flex:1;background:#141412;border:1px solid #1e1e1c;border-radius:12px;padding:12px 8px;text-align:center;">
+            <div style="font-size:9px;letter-spacing:0.12em;color:#6b6b68;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:8px;">Watch for</div>
+            <div class="signal-sprite sprite-peace" id="popup-s12-seeker-icon" style="margin:0 auto 8px;"></div>
+            <div style="font-size:11px;color:#F0EDE8;font-family:'JetBrains Mono',monospace;" id="popup-s12-seeker-label">Peace sign</div>
+          </div>
+          <div style="flex:1;background:#141412;border:1px solid rgba(200,82,26,0.2);border-radius:12px;padding:12px 8px;text-align:center;">
+            <div style="font-size:9px;letter-spacing:0.12em;color:#C8521A;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:8px;">Respond with</div>
+            <div class="signal-sprite sprite-point-up" id="popup-s12-signal-icon" style="margin:0 auto 8px;"></div>
+            <div style="font-size:11px;color:#F0EDE8;font-family:'JetBrains Mono',monospace;" id="popup-s12-target-label">One finger up</div>
+          </div>
+        </div>
         <div class="contact-popup-body">
-          Respond with your signal if it's really them.<br><br>
-          <strong>1.</strong> Wait for them to signal you first.<br>
-          <strong>2.</strong> If it feels right, respond with yours — keep it casual.<br>
-          <strong>3.</strong> Tap below once the exchange is done.
+          Only respond if you see their signal first — keep it casual, nothing to anyone else.
         </div>
         <div style="display:flex;gap:10px;margin-top:4px;">
           <button id="evade-btn" onclick="fbEvade()" disabled style="flex:1;padding:13px;background:#141412;border:1px solid #2a2a28;border-radius:10px;color:#3d3d3b;font-size:12px;cursor:not-allowed;font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;">Not me (15s)</button>
@@ -2426,7 +2485,7 @@
           <div class="signal-sprite sprite-peace" id="seeker-signal-icon"></div>
           <div class="signal-gesture" id="seeker-signal-label">Peace sign</div>
         </div>
-        <div class="signal-card">
+        <div class="signal-card yours">
           <div class="signal-card-label">They respond with</div>
           <div class="signal-sprite sprite-point-up" id="target-signal-icon"></div>
           <div class="signal-gesture" id="target-signal-label">One finger up</div>
@@ -2470,13 +2529,21 @@
     <div class="contact-popup" id="target-popup">
       <div class="contact-popup-sheet">
         <div class="contact-popup-handle"></div>
-        <div class="signal-sprite sprite-point-up" id="popup-target-signal-icon" style="margin:0 auto 12px;"></div>
-        <div class="contact-popup-title">Someone's found you.</div>
+        <div class="contact-popup-title" style="margin-bottom:16px;">Someone's found you.</div>
+        <div style="display:flex;gap:10px;margin-bottom:16px;">
+          <div style="flex:1;background:#141412;border:1px solid #1e1e1c;border-radius:12px;padding:12px 8px;text-align:center;">
+            <div style="font-size:9px;letter-spacing:0.12em;color:#6b6b68;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:8px;">Watch for</div>
+            <div class="signal-sprite sprite-peace" id="popup-target-seeker-icon" style="margin:0 auto 8px;"></div>
+            <div style="font-size:11px;color:#F0EDE8;font-family:'JetBrains Mono',monospace;" id="popup-target-seeker-label">Peace sign</div>
+          </div>
+          <div style="flex:1;background:#141412;border:1px solid rgba(200,82,26,0.2);border-radius:12px;padding:12px 8px;text-align:center;">
+            <div style="font-size:9px;letter-spacing:0.12em;color:#C8521A;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:8px;">Respond with</div>
+            <div class="signal-sprite sprite-point-up" id="popup-target-signal-icon" style="margin:0 auto 8px;"></div>
+            <div style="font-size:11px;color:#F0EDE8;font-family:'JetBrains Mono',monospace;" id="popup-target-target-label">One finger up</div>
+          </div>
+        </div>
         <div class="contact-popup-body">
-          Respond with your signal if it's really them.<br><br>
-          <strong>1.</strong> Wait for them to signal you first.<br>
-          <strong>2.</strong> If it feels right, respond with yours — keep it casual.<br>
-          <strong>3.</strong> Confirm below once the exchange is done.
+          Only respond if you see their signal first — keep it casual, nothing to anyone else.
         </div>
         <div style="display:flex;gap:10px;margin-top:4px;">
           <button onclick="dismissTargetPopup();goTo(12);" style="flex:1;padding:13px;background:#141412;border:1px solid #2a2a28;border-radius:10px;color:#6b6b68;font-size:12px;cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;">Not me</button>
@@ -2532,6 +2599,8 @@
 
       <button class="btn-primary" style="margin-bottom:12px;" onclick="showFeedbackSheet()">Leave feedback</button>
 
+      <button onclick="fbLeaveRoom();goTo(7);" style="width:100%;padding:12px;background:none;border:none;color:#3d3d3b;font-size:12px;cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;">Back to lobby</button>
+
       <div id="submit-status" style="font-size:11px;color:#6b6b68;font-family:'JetBrains Mono',monospace;text-align:center;margin-top:10px;display:none;"></div>
     </div>
 
@@ -2549,14 +2618,14 @@
 </div>
 
 <!-- SCREEN NAV (outside phone, below) — set display:none for live, remove to re-enable in dev -->
-<div style="display:none; gap:10px; margin-top:24px; align-items:center;">
+<div style="display:flex; gap:10px; margin-top:24px; align-items:center;">
   <button onclick="goTo(currentScreen-1)" style="background:none;border:1px solid #2a2a28;color:#6b6b68;padding:8px 16px;border-radius:8px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:13px;">← Prev</button>
   <span id="screen-counter" style="color:#3d3d3b;font-size:13px;font-family:'JetBrains Mono',monospace;">Screen 1 of 15</span>
   <button onclick="goTo(currentScreen+1)" style="background:none;border:1px solid #2a2a28;color:#6b6b68;padding:8px 16px;border-radius:8px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:13px;">Next →</button>
 </div>
 
 <script>
-  let currentScreen = 7;
+  let currentScreen = 1;
 
   const TAKEN = ['ghost_in_the_crowd', 'shadow', 'burned', 'finder', 'scout'];
 
@@ -2753,15 +2822,34 @@
     const seekerLabel   = document.getElementById('seeker-signal-label');
     const targetIcon    = document.getElementById('target-signal-icon');
     const targetLabel   = document.getElementById('target-signal-label');
-    const popupIcon     = document.getElementById('popup-target-signal-icon');
-    const popupS12Icon  = document.getElementById('popup-s12-signal-icon');
+
+    // s14 target popup
+    const popupTargetSignal  = document.getElementById('popup-target-signal-icon');
+    const popupTargetSeeker  = document.getElementById('popup-target-seeker-icon');
+    const popupTargetSeekerL = document.getElementById('popup-target-seeker-label');
+    const popupTargetTargetL = document.getElementById('popup-target-target-label');
+
+    // s12 target popup
+    const popupS12Signal  = document.getElementById('popup-s12-signal-icon');
+    const popupS12Seeker  = document.getElementById('popup-s12-seeker-icon');
+    const popupS12SeekerL = document.getElementById('popup-s12-seeker-label');
+    const popupS12TargetL = document.getElementById('popup-s12-target-label');
 
     applySignalClass(seekerIcon, seekerSignal);
     seekerLabel.textContent = seekerSignal.label;
     applySignalClass(targetIcon, targetSignal);
     targetLabel.textContent = targetSignal.label;
-    applySignalClass(popupIcon, targetSignal);
-    applySignalClass(popupS12Icon, targetSignal);
+
+    // target sees seeker's signal (watch for) and their own (respond with)
+    if (popupTargetSeeker)  applySignalClass(popupTargetSeeker, seekerSignal);
+    if (popupTargetSeekerL) popupTargetSeekerL.textContent = seekerSignal.label;
+    if (popupTargetSignal)  applySignalClass(popupTargetSignal, targetSignal);
+    if (popupTargetTargetL) popupTargetTargetL.textContent = targetSignal.label;
+
+    if (popupS12Seeker)  applySignalClass(popupS12Seeker, seekerSignal);
+    if (popupS12SeekerL) popupS12SeekerL.textContent = seekerSignal.label;
+    if (popupS12Signal)  applySignalClass(popupS12Signal, targetSignal);
+    if (popupS12TargetL) popupS12TargetL.textContent = targetSignal.label;
   }
 
   function goTo(n) {
@@ -3364,18 +3452,6 @@
     });
   }
 
-  function startRoundTimer() {
-    if (roundTimerInterval) return;
-    roundTimerInterval = setInterval(() => {
-      if (roundSecondsLeft > 0) {
-        roundSecondsLeft--;
-        updateTimerDisplays();
-      } else {
-        clearInterval(roundTimerInterval);
-      }
-    }, 1000);
-  }
-
   // ── QUESTION TIMER ────────────────────────────────────────────────────────
   let questionTimerInterval = null;
   const QUESTION_SECS = 45;
@@ -3413,21 +3489,24 @@
 
   function setTurn(yours) {
     isYourTurn = yours;
-    const popup   = document.getElementById('your-turn-popup');
-    const card    = document.getElementById('desc-card');
+    const popup     = document.getElementById('your-turn-popup');
+    const backdrop  = document.getElementById('your-turn-backdrop');
+    const card      = document.getElementById('desc-card');
     const lblYour = document.getElementById('lbl-your');
     const lblTheir = document.getElementById('lbl-their');
     const lockinBtn = document.getElementById('lockin-btn');
 
     if (yours) {
-      if (popup) { popup.classList.add('open'); setTimeout(() => { const i = document.getElementById('q-input'); if(i) i.focus(); }, 400); }
+      if (popup)    { popup.classList.add('open');    setTimeout(() => { const i = document.getElementById('q-input'); if(i) i.focus(); }, 420); }
+      if (backdrop) backdrop.classList.add('open');
       if (card) card.classList.add('your-turn');
       lblYour.classList.add('active');
       lblTheir.classList.remove('active');
       startQuestionTimer();
       if (lockinBtn) { lockinBtn.disabled = false; lockinBtn.classList.remove('inactive'); }
     } else {
-      if (popup) { popup.classList.remove('open'); const i = document.getElementById('q-input'); if(i) { i.value = ''; handleQInput(''); } }
+      if (popup)    { popup.classList.remove('open'); const i = document.getElementById('q-input'); if(i) { i.value = ''; handleQInput(''); } }
+      if (backdrop) backdrop.classList.remove('open');
       if (card) card.classList.remove('your-turn');
       lblYour.classList.remove('active');
       lblTheir.classList.add('active');
@@ -3609,11 +3688,14 @@
 
   // ── PRESENCE / DISCONNECTION ──────────────────────────────────────────────
   let disconnectDebounce = null;
+  let infoConnectedRef = null;
+  let infoConnectedHandler = null;
 
   function fbRegisterPresence() {
     const connRef = roomRef.child('players/' + myId + '/connected');
     // Re-assert connected=true and resync timer every time the socket reconnects
-    firebase.database().ref('.info/connected').on('value', snap => {
+    infoConnectedRef = firebase.database().ref('.info/connected');
+    infoConnectedHandler = infoConnectedRef.on('value', snap => {
       if (snap.val() === true) {
         connRef.onDisconnect().set(false);
         connRef.set(true);
@@ -3878,6 +3960,8 @@
   // ── CLEANUP on leave ──────────────────────────────────────────────────────
   function fbLeaveRoom() {
     if (roundTimerInterval) { clearInterval(roundTimerInterval); roundTimerInterval = null; }
+    if (disconnectDebounce) { clearTimeout(disconnectDebounce); disconnectDebounce = null; }
+    if (infoConnectedRef && infoConnectedHandler) { infoConnectedRef.off('value', infoConnectedHandler); infoConnectedRef = null; infoConnectedHandler = null; }
     stopQuestionTimer();
     if (lockedListener && roomRef) roomRef.child('round/lockedBy').off('value', lockedListener);
     if (roomRef && oppId) roomRef.child('players/' + oppId + '/connected').off('value');
