@@ -1,0 +1,2064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='5' fill='%230d0d0b'/%3E%3Ctext x='3' y='23' font-family='monospace' font-size='20' font-weight='700' fill='%23F0EDE8'%3EB%3C/text%3E%3Crect x='16' y='8' width='3' height='15' rx='1' fill='%23C8521A'/%3E%3C/svg%3E">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Burned. — Pursuit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #080807;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 24px 0;
+  }
+
+  /* ── Phone frame ── */
+  .phone {
+    position: relative;
+    width: 390px;
+    height: 844px;
+    background: #0d0d0b;
+    border-radius: 44px;
+    border: 1px solid #1e1e1c;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px #111110, 0 40px 80px rgba(0,0,0,0.7);
+    flex-shrink: 0;
+  }
+
+  .screen {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+  }
+  .screen.active { display: flex; }
+
+  .screen-content {
+    flex: 1;
+    padding: 52px 24px 20px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .screen-label {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #C8521A;
+    margin-bottom: 10px;
+  }
+  .screen-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #F0EDE8;
+    line-height: 1.3;
+    margin-bottom: 8px;
+  }
+  .screen-body {
+    font-size: 13px;
+    color: #6b6b68;
+    line-height: 1.75;
+    margin-bottom: 28px;
+  }
+
+  .bottom-bar {
+    padding: 16px 24px 40px;
+    border-top: 1px solid #141412;
+    background: #0d0d0b;
+    flex-shrink: 0;
+  }
+
+  /* ── Buttons ── */
+  .btn-primary {
+    width: 100%;
+    padding: 16px;
+    background: #C8521A;
+    border: none;
+    border-radius: 12px;
+    color: #F0EDE8;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-primary:disabled { opacity: 0.28; cursor: not-allowed; }
+
+  .btn-ghost {
+    width: 100%;
+    padding: 14px;
+    background: none;
+    border: 1px solid #2a2a28;
+    border-radius: 12px;
+    color: #6b6b68;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+    margin-top: 10px;
+  }
+  .btn-ghost:hover { border-color: #3a3a38; color: #8b8b88; }
+
+  /* ── Room code input ── */
+  .room-input {
+    width: 100%;
+    background: #111110;
+    border: 1px solid #2a2a28;
+    border-radius: 10px;
+    padding: 16px;
+    color: #F0EDE8;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    letter-spacing: 0.08em;
+    text-transform: lowercase;
+    outline: none;
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
+  }
+  .room-input:focus { border-color: rgba(200,82,26,0.5); }
+  .error-text {
+    font-size: 11px;
+    color: #C8521A;
+    min-height: 18px;
+    margin-bottom: 16px;
+  }
+
+  /* ── Waiting dot ── */
+  .waiting-dot {
+    width: 6px; height: 6px;
+    background: #C8521A;
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    animation: breathe 2s ease-in-out infinite;
+  }
+  @keyframes breathe {
+    0%, 100% { opacity: 0.3; transform: scale(0.8); }
+    50%       { opacity: 1;   transform: scale(1);   }
+  }
+
+  /* ── Mode pill ── */
+  .mode-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(200,82,26,0.07);
+    border: 1px solid rgba(200,82,26,0.18);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #C8521A;
+    margin-bottom: 28px;
+    align-self: flex-start;
+  }
+  .mode-pill-dot {
+    width: 5px; height: 5px;
+    background: #C8521A;
+    border-radius: 50%;
+    flex-shrink: 0;
+    animation: breathe 2s ease-in-out infinite;
+  }
+
+  /* ── Ember glow backdrop ── */
+  .ember-glow-bg {
+    position: absolute;
+    bottom: 80px; left: 50%;
+    transform: translateX(-50%);
+    width: 220px; height: 220px;
+    background: radial-gradient(circle, rgba(200,82,26,0.09) 0%, transparent 70%);
+    pointer-events: none;
+    border-radius: 50%;
+  }
+
+  /* ════════════════════════════════════
+     EMBER FLIP
+  ════════════════════════════════════ */
+
+  .flip-outer {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    padding: 0 24px;
+  }
+
+  /* Caller designation strip */
+  .caller-strip {
+    text-align: center;
+    min-height: 48px;
+  }
+  .caller-strip-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #6b6b68;
+    margin-bottom: 6px;
+  }
+  .caller-strip-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #C8521A;
+  }
+  @keyframes pulse-em {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.35; }
+  }
+  .caller-strip-name.pulsing { animation: pulse-em 0.9s ease-in-out 4; }
+
+  /* The disc */
+  .ember-scene {
+    perspective: 700px;
+    width: 120px; height: 120px;
+    flex-shrink: 0;
+  }
+  .ember-disc {
+    width: 120px; height: 120px;
+    position: relative;
+    transform-style: preserve-3d;
+  }
+  .ember-face {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    user-select: none;
+  }
+
+  /* Lit side */
+  .face-lit {
+    background: #0d0d0b;
+    border: 1.5px solid rgba(200,82,26,0.75);
+  }
+  .face-lit .face-label {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: #C8521A;
+  }
+
+  /* Dark side */
+  .face-dark {
+    background: #0d0d0b;
+    border: 1.5px solid #252523;
+    transform: rotateY(180deg);
+  }
+  .face-dark .face-label {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: #2e2e2c;
+  }
+
+  /* Post-flip glow states */
+  .ember-disc.glow-lit  { filter: drop-shadow(0 0 10px rgba(200,82,26,0.4)); }
+  .ember-disc.glow-dark { filter: none; }
+
+  /* ── Terminal reveal ── */
+  .terminal-reveal {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8px;
+    gap: 10px;
+    flex: 1;
+  }
+  .terminal-line {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: baseline;
+    gap: 0;
+    white-space: pre;
+  }
+  .t-prompt { color: #C8521A; }
+  .t-prefix { color: #3d3d3b; }
+  .t-word   { color: #C8521A; font-weight: 700; }
+  .t-word.ash { color: #2e2e2c; }
+  @keyframes cur-blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  .t-cursor {
+    color: #C8521A;
+    animation: cur-blink 0.75s step-end infinite;
+  }
+  .t-cursor.done { animation: none; opacity: 0; }
+
+  /* Result tag */
+  .flip-result-tag {
+    text-align: center;
+    min-height: 48px;
+    opacity: 0;
+    transition: opacity 0.5s ease 0.2s;
+  }
+  .flip-result-tag.show { opacity: 1; }
+  .flip-result-eyebrow {
+    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: #6b6b68; margin-bottom: 6px;
+  }
+  .flip-result-value {
+    font-size: 20px; font-weight: 700; color: #F0EDE8;
+  }
+  .flip-result-value.correct { color: #C8521A; }
+
+  /* Flip slider */
+  .flip-slider-wrap {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+  .flip-slider-track {
+    width: 100%;
+    height: 54px;
+    border-radius: 27px;
+    background: #0d0d0b;
+    border: 1px solid #2a2a28;
+    position: relative;
+    touch-action: none;
+    user-select: none;
+  }
+  .flip-slider-label {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    pointer-events: none;
+    transition: color 0.2s;
+    z-index: 2;
+    color: #3d3d3b;
+  }
+  .flip-slider-label.left  { left: 22px; }
+  .flip-slider-label.right { right: 22px; }
+  .flip-slider-thumb {
+    position: absolute;
+    top: 4px;
+    height: calc(100% - 8px);
+    border-radius: 23px;
+    background: #1e1e1c;
+    z-index: 1;
+    cursor: grab;
+    touch-action: none;
+    transition: background 0.18s;
+  }
+  .flip-slider-thumb:active { cursor: grabbing; }
+  .flip-slider-hint {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #252523;
+  }
+
+  /* Passive wait line */
+  .passive-wait {
+    font-size: 12px; color: #3d3d3b;
+    text-align: center; letter-spacing: 0.04em;
+  }
+
+  /* ════════════════════════════════════
+     ROLE CHOICE (winner picks)
+  ════════════════════════════════════ */
+
+  .choice-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 8px;
+  }
+  .role-choice-card {
+    background: #111110;
+    border: 1px solid #2a2a28;
+    border-radius: 14px;
+    padding: 20px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    text-align: left;
+  }
+  .role-choice-card:hover { border-color: rgba(200,82,26,0.35); background: #141412; }
+  .role-choice-card.selected {
+    border-color: #C8521A;
+    background: rgba(200,82,26,0.06);
+  }
+  .role-card-title {
+    font-size: 16px; font-weight: 700; color: #F0EDE8;
+    margin-bottom: 6px;
+  }
+  .role-card-body {
+    font-size: 12px; color: #6b6b68; line-height: 1.65;
+  }
+
+  /* ════════════════════════════════════
+     ROLE REVEAL
+  ════════════════════════════════════ */
+
+  .role-reveal-center {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 0 28px;
+    gap: 10px;
+  }
+  .role-reveal-icon {
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .role-reveal-icon svg { width: 52px; height: 52px; stroke: #C8521A; fill: none; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
+  .role-reveal-title {
+    font-size: 30px; font-weight: 700; color: #F0EDE8;
+    line-height: 1.15;
+  }
+  .role-reveal-sub {
+    font-size: 13px; color: #6b6b68;
+    line-height: 1.7; max-width: 280px;
+  }
+
+  /* ════════════════════════════════════
+     SEEKER SETUP
+  ════════════════════════════════════ */
+
+  .setup-section { margin-bottom: 28px; }
+  .setup-section-label {
+    font-size: 10px; letter-spacing: 0.13em; text-transform: uppercase;
+    color: #C8521A; margin-bottom: 10px;
+  }
+  .setup-hint {
+    font-size: 11px; color: #3d3d3b; line-height: 1.6; margin-top: 8px;
+  }
+
+  .timer-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: #111110; border: 1px solid #2a2a28;
+    border-radius: 12px; padding: 14px 18px;
+  }
+  .timer-adj {
+    width: 38px; height: 38px;
+    background: #1a1a18; border: 1px solid #2a2a28;
+    border-radius: 8px; color: #6b6b68;
+    font-size: 22px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    transition: border-color 0.18s, color 0.18s;
+    line-height: 1;
+  }
+  .timer-adj:hover:not(:disabled) { border-color: #3a3a38; color: #F0EDE8; }
+  .timer-adj:disabled { opacity: 0.28; cursor: not-allowed; }
+  .timer-val {
+    font-size: 30px; font-weight: 700; color: #F0EDE8;
+    min-width: 90px; text-align: center;
+  }
+  .timer-val span { font-size: 14px; color: #6b6b68; font-weight: 400; }
+
+  .boundary-input {
+    width: 100%;
+    background: #111110; border: 1px solid #2a2a28;
+    border-radius: 10px; padding: 14px 16px;
+    color: #F0EDE8; font-family: 'JetBrains Mono', monospace;
+    font-size: 14px; outline: none;
+    transition: border-color 0.2s;
+  }
+  .boundary-input:focus { border-color: rgba(200,82,26,0.5); }
+  .boundary-input::placeholder { color: #3d3d3b; }
+
+  /* ════════════════════════════════════
+     ACTIVE ROUND — SHARED
+  ════════════════════════════════════ */
+
+  .round-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 52px 24px 16px;
+    flex-shrink: 0;
+  }
+  .round-label { font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #C8521A; }
+  .round-timer {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; font-weight: 700; letter-spacing: 0.08em;
+    color: #F0EDE8;
+  }
+  .round-timer.urgent { color: #C8521A; }
+
+  /* ── Proximity border pulse ── */
+  .proximity-overlay {
+    position: absolute; inset: 0; border-radius: inherit;
+    pointer-events: none; z-index: 10;
+    box-shadow: inset 0 0 0px 0px transparent;
+    transition: box-shadow 0.4s ease;
+  }
+  @keyframes pulse-border-ember {
+    0%,100% { box-shadow: inset 0 0 24px 6px rgba(200,82,26,0.10); }
+    50%      { box-shadow: inset 0 0 44px 14px rgba(200,82,26,0.22); }
+  }
+  @keyframes pulse-border-ember-close {
+    0%,100% { box-shadow: inset 0 0 32px 8px rgba(200,82,26,0.18); }
+    50%      { box-shadow: inset 0 0 60px 20px rgba(200,82,26,0.36); }
+  }
+  @keyframes pulse-border-cold {
+    0%,100% { box-shadow: inset 0 0 24px 5px rgba(240,237,232,0.06); }
+    50%      { box-shadow: inset 0 0 40px 10px rgba(240,237,232,0.12); }
+  }
+  @keyframes pulse-border-red {
+    0%,100% { box-shadow: inset 0 0 32px 8px rgba(180,30,30,0.18); }
+    50%      { box-shadow: inset 0 0 56px 20px rgba(180,30,30,0.38); }
+  }
+  .proximity-overlay.state-far    { animation: pulse-border-cold  3s ease-in-out infinite; }
+  .proximity-overlay.state-near   { animation: pulse-border-ember 2s ease-in-out infinite; }
+  .proximity-overlay.state-close  { animation: pulse-border-ember-close 1s ease-in-out infinite; }
+  .proximity-overlay.state-out    { animation: pulse-border-red   1.4s ease-in-out infinite; }
+
+  /* Pulse demo controls */
+  .pulse-demo-bar {
+    display: flex; gap: 6px; justify-content: center;
+    padding: 10px 24px 0;
+  }
+  .pulse-demo-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 4px 8px; border-radius: 5px; cursor: pointer;
+    border: 1px solid #2a2a28; background: #111110; color: #3d3d3b;
+  }
+  .pulse-demo-btn.active-far   { border-color:#4a4a48; color:#6b6b68; }
+  .pulse-demo-btn.active-near  { border-color:rgba(200,82,26,0.4); color:#C8521A; }
+  .pulse-demo-btn.active-close { border-color:#C8521A; color:#C8521A; background:rgba(200,82,26,0.08); }
+  .pulse-demo-btn.active-out   { border-color:rgba(180,30,30,0.5); color:#b41e1e; }
+
+  /* Photo placeholder */
+  .clue-photo {
+    width: 100%; aspect-ratio: 4/3;
+    background: #111110; border: 1px solid #2a2a28;
+    border-radius: 10px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 8px; position: relative; overflow: hidden;
+  }
+  .clue-photo-label {
+    font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: #3d3d3b;
+  }
+  .clue-photo svg { opacity: 0.18; }
+  .clue-photo.loaded { border-color: rgba(200,82,26,0.25); }
+  .clue-photo.loaded .clue-photo-label { color: #6b6b68; }
+
+  .clue-stack { display: flex; flex-direction: column; gap: 10px; padding: 0 24px; }
+
+  .clue-descriptor {
+    background: #111110; border: 1px solid rgba(200,82,26,0.3);
+    border-radius: 10px; padding: 16px;
+    font-size: 14px; color: #F0EDE8; letter-spacing: 0.02em;
+    line-height: 1.5;
+  }
+  .clue-descriptor-label {
+    font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: #C8521A; margin-bottom: 6px;
+  }
+
+
+  /* Countdown */
+  .countdown-wrap {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 20px 0 8px;
+  }
+  .countdown-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 56px; font-weight: 700; line-height: 1;
+    color: #F0EDE8; letter-spacing: -0.02em;
+  }
+  .countdown-number.urgent { color: #C8521A; }
+  .countdown-sub { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #3d3d3b; }
+
+  /* Pulse ring countdown */
+  .ring-countdown-wrap {
+    position: relative; display: flex; align-items: center; justify-content: center;
+    width: 180px; height: 180px; margin: 16px auto 8px;
+  }
+  .ring-countdown-wrap .countdown-number { position: relative; z-index: 2; font-size: 72px; }
+  .ring-shoot {
+    position: absolute; width: 100%; height: 100%;
+    border-radius: 50%;
+    border: 1.5px solid rgba(200,82,26,var(--ring-opacity, 0.3));
+    pointer-events: none; opacity: 0;
+  }
+  .ring-shoot.fire {
+    animation: ring-shoot-out 1s ease-out forwards;
+  }
+  @keyframes ring-shoot-out {
+    0%   { transform: scale(0.15); opacity: var(--ring-opacity, 0.3); }
+    100% { transform: scale(var(--ring-max-scale, 1.4)); opacity: 0; }
+  }
+  @keyframes num-flash {
+    0%,100% { opacity: 1; }
+    30%,70% { opacity: 0; }
+  }
+  .countdown-flash { animation: num-flash 0.28s ease-in-out; }
+
+  /* Bottom sheet pop-up (final clue alert) */
+  .final-clue-sheet {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: #111110; border-top: 1px solid rgba(200,82,26,0.35);
+    border-radius: 20px 20px 0 0; padding: 20px 24px 32px;
+    transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.25,0.8,0.25,1);
+    z-index: 20;
+  }
+  .final-clue-sheet.shown { transform: translateY(0); }
+  .final-clue-sheet-title {
+    font-size: 15px; font-weight: 700; color: #C8521A;
+    letter-spacing: 0.02em; margin-bottom: 6px;
+  }
+  .final-clue-sheet-body { font-size: 13px; color: #6b6b68; line-height: 1.5; }
+  .final-clue-sheet-dismiss {
+    position: absolute; top: 14px; right: 18px;
+    background: none; border: none; color: #3d3d3b; cursor: pointer;
+    font-size: 20px; line-height: 1; padding: 0;
+  }
+
+  /* Ghost signal overlay sheet */
+  .ghost-signal-sheet {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: #111110; border-top: 1px solid rgba(200,82,26,0.3);
+    border-radius: 24px 24px 0 0; padding: 12px 24px 36px;
+    transform: translateY(100%); transition: transform 0.45s cubic-bezier(0.25,0.8,0.25,1);
+    z-index: 30;
+  }
+  .ghost-signal-sheet.shown { transform: translateY(0); }
+  .ghost-signal-handle {
+    width: 36px; height: 4px; border-radius: 2px;
+    background: #2a2a28; margin: 0 auto 20px;
+  }
+
+  /* Signal screen — matches scout */
+  .signal-wrap {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; padding: 16px 28px 140px;
+    position: relative; z-index: 2; width: 100%; overflow-y: auto;
+  }
+  .signal-pair { display: flex; gap: 10px; width: 100%; margin-bottom: 24px; }
+  .signal-card {
+    flex: 1; background: #111110; border: 1px solid #1e1e1c;
+    border-radius: 14px; padding: 16px 14px;
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+  }
+  .signal-card.yours { border-color: rgba(200,82,26,0.3); background: rgba(200,82,26,0.04); }
+  .signal-card-label {
+    font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: #3d3d3b; margin-bottom: 12px;
+  }
+  .signal-card.yours .signal-card-label { color: #C8521A; }
+  .signal-sprite {
+    width: 66px; height: 110px;
+    background-image: url('burned_icons_ember.png');
+    background-size: 330px 220px; background-repeat: no-repeat;
+    margin: 0 auto 10px; flex-shrink: 0;
+  }
+  .sprite-point-up      { background-position:    0px   0px; }
+  .sprite-peace         { background-position:  -66px   0px; }
+  .sprite-fingers-cross { background-position: -132px   0px; }
+  .sprite-double-guns   { background-position: -198px   0px; }
+  .sprite-raised-fist   { background-position: -264px   0px; }
+  .sprite-ok            { background-position:    0px -110px; }
+  .sprite-finger-gun    { background-position:  -66px -110px; }
+  .sprite-victory       { background-position: -132px -110px; }
+  .sprite-listening     { background-position: -198px -110px; }
+  .sprite-binoculars    { background-position: -264px -110px; }
+  @keyframes signal-float {
+    0%,100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
+  }
+  .signal-gesture { font-size: 13px; font-weight: 400; color: #F0EDE8; line-height: 1.4; }
+  .signal-card:not(.yours) .signal-gesture { color: #6b6b68; }
+  .signal-instructions {
+    width: 100%; background: #0f0f0d; border: 1px solid #1e1e1c;
+    border-radius: 12px; padding: 16px; margin-bottom: 24px;
+  }
+  .signal-instr-title {
+    font-size: 11px; letter-spacing: 0.1em; color: #3d3d3b;
+    text-transform: uppercase; margin-bottom: 10px;
+  }
+  .signal-instr-step { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
+  .signal-instr-step:last-child { margin-bottom: 0; }
+  .signal-step-num {
+    width: 18px; height: 18px; border-radius: 50%; border: 1px solid #2a2a28;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: #C8521A; flex-shrink: 0; margin-top: 1px;
+  }
+  .signal-step-text { font-size: 13px; color: #6b6b68; line-height: 1.5; }
+  .signal-waiting {
+    font-size: 11px; letter-spacing: 0.1em; color: #3d3d3b;
+    text-transform: uppercase; animation: waiting-blink 1.8s ease-in-out infinite;
+  }
+
+  /* Round end — matches scout */
+  .end-wrap {
+    width: 100%; flex: 1; display: flex; flex-direction: column;
+    padding: 16px 28px 100px; overflow-y: auto;
+  }
+  .result-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 14px; border-radius: 20px;
+    font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+    margin-bottom: 20px; align-self: flex-start;
+  }
+  .result-badge.win { background: rgba(200,82,26,0.1); border: 1px solid rgba(200,82,26,0.3); color: #C8521A; }
+  .result-badge.loss { background: #141412; border: 1px solid #2a2a28; color: #6b6b68; }
+  .score-row { display: flex; gap: 10px; margin-bottom: 20px; }
+  .score-tile {
+    flex: 1; background: #111110; border: 1px solid #1e1e1c;
+    border-radius: 12px; padding: 14px; text-align: center;
+  }
+  .score-val { font-size: 26px; font-weight: 400; color: #F0EDE8; margin-bottom: 4px; }
+  .score-val.ember { color: #C8521A; }
+  .score-lbl { font-size: 10px; letter-spacing: 0.1em; color: #3d3d3b; text-transform: uppercase; }
+  .reveal-card {
+    background: #111110; border: 1px solid #1e1e1c;
+    border-radius: 16px; padding: 18px; margin-bottom: 16px;
+  }
+  .reveal-eyebrow {
+    font-size: 10px; letter-spacing: 0.12em; color: #3d3d3b;
+    text-transform: uppercase; margin-bottom: 12px;
+  }
+  .reveal-line { font-size: 13px; color: #F0EDE8; line-height: 1.8; }
+  .reveal-line.confirmed { color: #C8521A; }
+  .reveal-line.missed { color: #3d3d3b; }
+
+  /* ════════════════════════════════════
+     HIDER WAITING
+  ════════════════════════════════════ */
+
+  .hider-wait-center {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 0 32px; gap: 16px;
+  }
+  .hw-icon {
+    width: 60px; height: 60px; border-radius: 50%;
+    background: rgba(200,82,26,0.07);
+    border: 1px solid rgba(200,82,26,0.18);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 8px;
+    animation: breathe 2.4s ease-in-out infinite;
+  }
+  .hw-icon svg { width: 26px; height: 26px; stroke: #C8521A; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .hw-status { font-size: 11px; color: #3d3d3b; letter-spacing: 0.05em; }
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- ═══ P1: LOBBY ═══ -->
+  <div class="screen active" id="p1">
+    <div class="screen-content" style="justify-content:center;padding-bottom:120px;">
+      <div class="mode-pill">
+        <div class="mode-pill-dot"></div>
+        Pursuit
+      </div>
+      <div class="screen-title" style="font-size:24px;line-height:1.25;margin-bottom:12px;">
+        A game of cat &amp; mouse between friends.
+      </div>
+      <input class="room-input" id="room-input" type="text" placeholder="room code"
+        maxlength="24" autocomplete="off" autocorrect="off" spellcheck="false"
+        oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9]/g,'');onRoomInput()">
+      <div class="error-text" id="room-error"></div>
+      <button class="btn-primary" id="join-btn" onclick="joinRoom()" disabled>Join room</button>
+      <a href="/playdemo" style="display:block;text-align:center;margin-top:20px;font-size:12px;color:#3d3d3b;letter-spacing:0.04em;text-decoration:none;">← Switch to Scout</a>
+    </div>
+  </div>
+
+  <!-- ═══ P2: WAITING FOR OPPONENT ═══ -->
+  <div class="screen" id="p2">
+    <div class="screen-content" style="align-items:center;justify-content:center;text-align:center;padding-bottom:120px;">
+      <div class="waiting-dot"></div>
+      <div class="screen-label">Waiting</div>
+      <div class="screen-title" style="font-size:20px;margin-bottom:10px;">Opponent joining...</div>
+      <div class="screen-body" style="margin-bottom:0;max-width:240px;">The ember drops the moment they connect.</div>
+      <div id="room-display" style="margin-top:36px;font-size:11px;letter-spacing:0.12em;color:#2a2a28;text-transform:uppercase;"></div>
+    </div>
+  </div>
+
+  <!-- ═══ P3: EMBER FLIP ═══ -->
+  <div class="screen" id="p3">
+    <div class="screen-content" id="p3-header" style="padding-bottom:0;">
+      <div class="screen-label" id="p3-label">The flip</div>
+      <div class="screen-title" id="p3-title" style="margin-bottom:4px;">Deciding who calls...</div>
+      <div class="screen-body" id="p3-body" style="margin-bottom:0;">An ember decides who makes the call.</div>
+    </div>
+
+    <div class="flip-outer">
+      <!-- Who's calling -->
+      <div class="caller-strip" id="caller-strip" style="visibility:hidden;">
+        <div class="caller-strip-eyebrow" id="caller-eyebrow">calling it</div>
+        <div class="caller-strip-name pulsing" id="caller-name">—</div>
+      </div>
+
+      <!-- Terminal reveal -->
+      <div class="terminal-reveal" id="terminal-reveal">
+        <div class="terminal-line">
+          <span class="t-prompt">&gt;&nbsp;</span><span class="t-prefix" id="t-prefix"></span><span class="t-word" id="t-word"></span><span class="t-cursor" id="t-cursor">_</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALLER: flip slider -->
+    <div class="bottom-bar" id="p3-call-bar" style="display:none;">
+      <div class="flip-slider-wrap">
+        <div class="flip-slider-track" id="flip-track">
+          <span class="flip-slider-label left" id="label-ember">Ember</span>
+          <div class="flip-slider-thumb" id="flip-thumb"></div>
+          <span class="flip-slider-label right" id="label-ash">Ash</span>
+        </div>
+        <div class="flip-slider-hint">slide to call it</div>
+      </div>
+    </div>
+
+    <!-- NON-CALLER: passive wait -->
+    <div class="bottom-bar" id="p3-wait-bar" style="display:none;">
+      <div class="passive-wait">Waiting for opponent to call...</div>
+    </div>
+
+    <!-- POST-FLIP: continue -->
+    <div class="bottom-bar" id="p3-continue-bar" style="display:none;">
+      <button class="btn-primary" onclick="goToRoleChoice()">Continue →</button>
+    </div>
+  </div>
+
+  <!-- ═══ P4-WINNER: ROLE CHOICE ═══ -->
+  <div class="screen" id="p4w">
+    <div class="screen-content">
+      <div class="screen-label">You called it</div>
+      <div class="screen-title" style="margin-bottom:6px;">Choose your role.</div>
+      <div class="screen-body">Your call, your advantage. Pick your side — your opponent gets the other.</div>
+      <div class="choice-cards">
+        <button class="role-choice-card" id="card-seeker" onclick="selectRole('seeker')">
+          <div class="role-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C8521A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><circle cx="12" cy="12" r="7"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>Hunter</div>
+          <div class="role-card-body">Navigate the space. Read the clues. Lock in before the timer runs out.</div>
+        </button>
+        <button class="role-choice-card" id="card-hider" onclick="selectRole('hider')">
+          <div class="role-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C8521A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><path d="M12 2C8.13 2 5 5.13 5 9v10l2.5-2 2.5 2 2.5-2 2.5 2 2.5-2V9C17 5.13 15.87 2 12 2z"/><circle cx="10" cy="10" r="1" fill="#C8521A" stroke="none"/><circle cx="14" cy="10" r="1" fill="#C8521A" stroke="none"/></svg>Ghost</div>
+          <div class="role-card-body">Find your spot. Prepare your clues. Stay still and make them work for it.</div>
+        </button>
+      </div>
+    </div>
+    <div class="bottom-bar">
+      <button class="btn-primary" id="role-confirm-btn" onclick="confirmRole()" disabled>Confirm role</button>
+    </div>
+  </div>
+
+  <!-- ═══ P4-LOSER: WAITING FOR ROLE ASSIGNMENT ═══ -->
+  <div class="screen" id="p4l">
+    <div class="screen-content" style="align-items:center;justify-content:center;text-align:center;">
+      <div class="waiting-dot"></div>
+      <div class="screen-label">Stand by</div>
+      <div class="screen-title" style="font-size:20px;margin-bottom:10px;">Opponent is choosing...</div>
+      <div class="screen-body" style="margin-bottom:0;max-width:240px;">They called it — they pick first. Your role is coming.</div>
+    </div>
+  </div>
+
+  <!-- ═══ P5: ROLE REVEAL (both) ═══ -->
+  <div class="screen" id="p5">
+    <div class="role-reveal-center">
+      <div class="role-reveal-icon" id="reveal-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg></div>
+      <div class="screen-label" id="reveal-label">Your role</div>
+      <div class="role-reveal-title" id="reveal-title">Hunter</div>
+      <div class="role-reveal-sub" id="reveal-sub">You're hunting. Navigate the space, read the clues, and lock in before time runs out.</div>
+    </div>
+    <div class="bottom-bar">
+      <button class="btn-primary" onclick="afterRoleReveal()">Got it — let's go</button>
+    </div>
+  </div>
+
+  <!-- ═══ P6S: SEEKER SETUP ═══ -->
+  <div class="screen" id="p6s">
+    <div class="screen-content">
+      <div class="screen-label">Round setup</div>
+      <div class="screen-title" style="margin-bottom:6px;">Set the terms.</div>
+      <div class="screen-body">Your opponent is finding their spot. Set the round details while they prepare.</div>
+
+      <div class="setup-section">
+        <div class="setup-section-label">Round timer</div>
+        <div class="timer-row">
+          <button class="timer-adj" id="btn-minus" onclick="adjustTimer(-5)">−</button>
+          <div class="timer-val" id="timer-val">15 <span>min</span></div>
+          <button class="timer-adj" id="btn-plus" onclick="adjustTimer(5)">+</button>
+        </div>
+        <div class="setup-hint">5 min minimum · 30 min maximum · default 15 min</div>
+      </div>
+
+      <div class="setup-section">
+        <div class="setup-section-label">Boundary</div>
+        <input class="boundary-input" id="boundary-input" type="text"
+          placeholder="e.g. ground floor, Flinders St Station"
+          oninput="checkSetupReady()">
+        <div class="setup-hint">Name the agreed space so both players are clear on the limits.</div>
+      </div>
+    </div>
+    <div class="bottom-bar">
+      <button class="btn-primary" id="setup-btn" onclick="confirmSetup()" disabled>Confirm setup</button>
+    </div>
+  </div>
+
+  <!-- ═══ P6H: HIDER — FIND YOUR SPOT ═══ -->
+  <div class="screen" id="p6h">
+    <div class="hider-wait-center">
+      <div class="hw-icon">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+      </div>
+      <div class="screen-label">Find your spot</div>
+      <div class="screen-title" style="font-size:22px;margin-bottom:8px;">Your hunter is setting the terms.</div>
+      <div class="screen-body" style="margin-bottom:0;max-width:270px;">Go find where you'll hide. You'll prep your clues the moment they confirm setup.</div>
+      <div class="hw-status" id="hider-setup-status">Waiting for hunter to confirm setup...</div>
+    </div>
+  </div>
+
+  <!-- ═══ P7H: HIDER — CLUE PREP ═══ -->
+  <div class="screen" id="p7h">
+    <div class="screen-content">
+      <div class="screen-label">Clue prep</div>
+      <div class="screen-title" style="margin-bottom:6px;">Set your clues.</div>
+      <div class="screen-body">Two photos and one descriptor. Your hunter reveals them one at a time — make each one count.</div>
+
+      <div style="background:#111110;border:1px solid rgba(200,82,26,0.3);border-radius:12px;padding:20px;margin-bottom:14px;">
+        <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#C8521A;margin-bottom:10px;">Your position</div>
+        <input type="text" id="position-input" placeholder="e.g. corner booth, ground floor café"
+          style="width:100%;background:#0d0d0b;border:1px solid #2a2a28;border-radius:8px;padding:12px;color:#F0EDE8;font-family:'JetBrains Mono',monospace;font-size:13px;outline:none;box-sizing:border-box;"
+          oninput="checkCluesReady()">
+      </div>
+      <div style="background:#111110;border:1px solid #2a2a28;border-radius:12px;padding:28px 20px;text-align:center;margin-bottom:14px;">
+        <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#C8521A;margin-bottom:12px;">Clue 1 — Wide shot</div>
+        <div style="font-size:12px;color:#3d3d3b;line-height:1.6;">Photo capture coming in next build</div>
+      </div>
+      <div style="background:#111110;border:1px solid #2a2a28;border-radius:12px;padding:28px 20px;text-align:center;margin-bottom:14px;">
+        <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#C8521A;margin-bottom:12px;">Clue 2 — Tight crop</div>
+        <div style="font-size:12px;color:#3d3d3b;line-height:1.6;">Photo capture coming in next build</div>
+      </div>
+      <div style="background:#111110;border:1px solid #2a2a28;border-radius:12px;padding:20px;margin-bottom:14px;">
+        <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#C8521A;margin-bottom:10px;">Clue 3 — Descriptor</div>
+        <input type="text" id="descriptor-input" placeholder="e.g. red knit jumper"
+          style="width:100%;background:#0d0d0b;border:1px solid #2a2a28;border-radius:8px;padding:12px;color:#F0EDE8;font-family:'JetBrains Mono',monospace;font-size:14px;outline:none;"
+          oninput="checkCluesReady()">
+      </div>
+    </div>
+    <div class="bottom-bar">
+      <button class="btn-primary" id="clues-ready-btn" onclick="confirmClues()" disabled>Clues ready — start round</button>
+    </div>
+  </div>
+
+  <!-- ═══ P7S: SEEKER — WAITING FOR HIDER CLUE PREP ═══ -->
+  <div class="screen" id="p7s">
+    <div class="hider-wait-center">
+      <div class="hw-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9v10l2.5-2 2.5 2 2.5-2 2.5 2 2.5-2V9C17 5.13 15.87 2 12 2z"/><circle cx="10" cy="10" r="1" fill="#C8521A" stroke="none"/><circle cx="14" cy="10" r="1" fill="#C8521A" stroke="none"/></svg>
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:16px;color:#6b6b68;letter-spacing:0.04em;display:flex;align-items:baseline;gap:2px;">
+        <span id="p7s-typed"></span><span id="p7s-cursor" style="color:#C8521A;animation:cur-blink 0.75s step-end infinite;">_</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ P8S: HUNTER — CLUE 1 ACTIVE ═══ -->
+  <div class="screen" id="p8s">
+    <div class="proximity-overlay state-far" id="p8s-overlay"></div>
+    <div class="round-header">
+      <span class="round-label">Clue 1 of 3</span>
+      <span class="round-timer" id="p8s-timer">15:00</span>
+    </div>
+    <div class="clue-stack">
+      <div class="clue-photo loaded">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C8521A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <span class="clue-photo-label">Wide shot</span>
+      </div>
+    </div>
+    <div class="pulse-demo-bar">
+      <button class="pulse-demo-btn active-far"   onclick="setOverlay('p8s','far')">Far</button>
+      <button class="pulse-demo-btn"              onclick="setOverlay('p8s','near')">Near</button>
+      <button class="pulse-demo-btn"              onclick="setOverlay('p8s','close')">Close</button>
+      <button class="pulse-demo-btn"              onclick="setOverlay('p8s','out')">Out of bounds</button>
+    </div>
+    <div class="bottom-bar">
+      <button class="btn-primary" onclick="revealClue2()">Reveal clue 2</button>
+    </div>
+  </div>
+
+  <!-- ═══ P9S: HUNTER — CLUE 2 ACTIVE ═══ -->
+  <div class="screen" id="p9s">
+    <div class="proximity-overlay state-near" id="p9s-overlay"></div>
+    <div class="round-header">
+      <span class="round-label">Clue 2 of 3</span>
+      <span class="round-timer" id="p9s-timer">14:12</span>
+    </div>
+    <div class="clue-stack">
+      <div class="clue-photo loaded" style="opacity:0.45;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C8521A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <span class="clue-photo-label">Wide shot</span>
+      </div>
+      <div class="clue-photo loaded">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C8521A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <span class="clue-photo-label">Tight crop</span>
+      </div>
+    </div>
+    <div class="pulse-demo-bar">
+      <button class="pulse-demo-btn"              onclick="setOverlay('p9s','far')">Far</button>
+      <button class="pulse-demo-btn active-near"  onclick="setOverlay('p9s','near')">Near</button>
+      <button class="pulse-demo-btn"              onclick="setOverlay('p9s','close')">Close</button>
+      <button class="pulse-demo-btn"              onclick="setOverlay('p9s','out')">Out of bounds</button>
+    </div>
+    <div class="bottom-bar">
+      <button class="btn-primary" onclick="revealFinalClue()">Reveal clue 3</button>
+    </div>
+  </div>
+
+  <!-- ═══ P10S: HUNTER — CLUE 3 / FINAL COUNTDOWN ═══ -->
+  <div class="screen" id="p10s">
+    <div class="final-clue-sheet" id="p10s-sheet">
+      <button class="final-clue-sheet-dismiss" onclick="dismissSheet('p10s-sheet')">×</button>
+      <div class="final-clue-sheet-title">Final clue activated.</div>
+      <div class="final-clue-sheet-body">You've triggered the 90 second window. Find them before time runs out.</div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 24px 16px;">
+      <div class="ring-countdown-wrap">
+        <div class="ring-shoot" id="p10s-ring"></div>
+        <div class="countdown-number" id="p10s-countdown">90</div>
+      </div>
+      <div class="countdown-sub" style="margin-bottom:28px;">seconds remaining</div>
+      <div class="clue-descriptor" style="width:100%;">
+        <div class="clue-descriptor-label">Descriptor</div>
+        <span id="p10s-descriptor">Red knit jumper</span>
+      </div>
+    </div>
+    <div class="bottom-bar">
+      <button class="btn-primary" style="background:#C8521A;" onclick="fbLockIn()">I found them — lock in</button>
+    </div>
+  </div>
+
+  <!-- ═══ P8H: GHOST — ROUND LIVE ═══ -->
+  <div class="screen" id="p8h">
+    <div class="hider-wait-center">
+      <div class="hw-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9v10l2.5-2 2.5 2 2.5-2 2.5 2 2.5-2V9C17 5.13 15.87 2 12 2z"/><circle cx="10" cy="10" r="1" fill="#C8521A" stroke="none"/><circle cx="14" cy="10" r="1" fill="#C8521A" stroke="none"/></svg>
+      </div>
+      <div class="screen-title" style="font-size:20px;margin-bottom:4px;">Stay hidden.</div>
+      <div class="screen-body" style="margin-bottom:0;max-width:240px;">You're being hunted. Sit tight.</div>
+      <div style="margin-top:24px;font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:700;color:#F0EDE8;letter-spacing:0.04em;" id="p8h-timer">15:00</div>
+      <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#3d3d3b;margin-top:4px;">remaining</div>
+    </div>
+  </div>
+
+  <!-- ═══ P9H: GHOST — CLUE 3 TRIGGERED ═══ -->
+  <div class="screen" id="p9h">
+    <div class="final-clue-sheet" id="p9h-sheet">
+      <button class="final-clue-sheet-dismiss" onclick="dismissSheet('p9h-sheet')">×</button>
+      <div class="final-clue-sheet-title">Final clue triggered.</div>
+      <div class="final-clue-sheet-body">Your hunter has everything. Don't move. Stay exactly where you are.</div>
+    </div>
+    <div class="hider-wait-center">
+      <div class="hw-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9v10l2.5-2 2.5 2 2.5-2 2.5 2 2.5-2V9C17 5.13 15.87 2 12 2z"/><circle cx="10" cy="10" r="1" fill="#C8521A" stroke="none"/><circle cx="14" cy="10" r="1" fill="#C8521A" stroke="none"/></svg>
+      </div>
+      <div class="screen-label" style="color:#C8521A;">Hunter is closing in.</div>
+      <div class="ring-countdown-wrap">
+        <div class="ring-shoot" id="p9h-ring"></div>
+        <div class="countdown-number" id="p9h-countdown">90</div>
+      </div>
+      <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#3d3d3b;margin-top:-4px;">seconds</div>
+    </div>
+  </div>
+
+  <!-- ═══ P11: SIGNAL EXCHANGE ═══ -->
+  <div class="screen" id="p11">
+    <div class="round-header" style="justify-content:center;">
+      <div class="round-timer">Found them.</div>
+    </div>
+    <div class="signal-wrap">
+      <div class="screen-label" style="align-self:flex-start;">You've locked in.</div>
+      <div class="screen-title" style="align-self:flex-start;margin-bottom:20px;">Perform your signal.</div>
+      <div class="signal-pair">
+        <div class="signal-card yours">
+          <div class="signal-card-label">Your signal</div>
+          <div class="signal-sprite sprite-peace"></div>
+          <div class="signal-gesture">Peace sign</div>
+        </div>
+        <div class="signal-card" style="opacity:0.45;">
+          <div class="signal-card-label">Look for theirs</div>
+          <div class="signal-sprite sprite-point-up"></div>
+          <div class="signal-gesture">One finger up</div>
+        </div>
+      </div>
+      <div class="signal-waiting">Waiting for ghost to confirm...</div>
+      <button onclick="fbCancelLockIn()" style="margin-top:20px;background:none;border:none;color:#3d3d3b;font-size:12px;cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;padding:8px;">
+        Wrong person — keep searching
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══ GHOST SIGNAL SHEET (overlay — not a nav screen) ═══ -->
+  <div class="ghost-signal-sheet" id="ghost-signal-sheet">
+    <div class="ghost-signal-handle"></div>
+    <div class="screen-label" style="color:#C8521A;margin-bottom:4px;">They've found you.</div>
+    <div class="screen-title" style="font-size:20px;margin-bottom:20px;">Perform your response.</div>
+    <div class="signal-pair" style="margin-bottom:16px;">
+      <div class="signal-card">
+        <div class="signal-card-label">They signal with</div>
+        <div class="signal-sprite sprite-peace"></div>
+        <div class="signal-gesture">Peace sign</div>
+      </div>
+      <div class="signal-card yours">
+        <div class="signal-card-label">You respond with</div>
+        <div class="signal-sprite sprite-point-up"></div>
+        <div class="signal-gesture">One finger up</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:#3d3d3b;line-height:1.6;margin-bottom:24px;text-align:center;">
+      Wait for them to approach. Respond casually — nothing to anyone around you.
+    </div>
+    <button class="btn-primary" style="margin-bottom:10px;" onclick="confirmGhostSignal()">I've been burned</button>
+    <button onclick="dismissGhostSignal()"
+      style="width:100%;padding:13px;background:none;border:1px solid #2a2a28;border-radius:12px;color:#6b6b68;font-size:13px;cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;">
+      Not me
+    </button>
+  </div>
+
+  <!-- ═══ P12: ROUND END — HUNTER WIN ═══ -->
+  <div class="screen" id="p12">
+    <div class="round-header" style="justify-content:center;">
+      <div class="round-label" style="color:#C8521A;">Round complete</div>
+    </div>
+    <div class="end-wrap">
+      <div class="result-badge win">✓ &nbsp;Hunter found them</div>
+      <div class="score-row">
+        <div class="score-tile">
+          <div class="score-val ember">2</div>
+          <div class="score-lbl">Clues used</div>
+        </div>
+        <div class="score-tile">
+          <div class="score-val">8:43</div>
+          <div class="score-lbl">Time left</div>
+        </div>
+        <div class="score-tile">
+          <div class="score-val">34s</div>
+          <div class="score-lbl">Final window</div>
+        </div>
+      </div>
+      <div class="reveal-card">
+        <div class="reveal-eyebrow">Clues revealed</div>
+        <div class="reveal-line confirmed">Wide shot — general area</div>
+        <div class="reveal-line confirmed">Tight crop — exact spot</div>
+        <div class="reveal-line missed">Descriptor — not needed</div>
+      </div>
+      <div class="reveal-card">
+        <div class="reveal-eyebrow">Ghost's position</div>
+        <div class="reveal-line" id="ghost-position-text">—</div>
+      </div>
+      <button class="btn-primary" style="margin-bottom:12px;" onclick="goTo('p1')">Back to lobby</button>
+      <button style="width:100%;padding:12px;background:none;border:none;color:#3d3d3b;font-size:12px;cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;">End session</button>
+    </div>
+  </div>
+
+  <!-- ═══ P12H: ROUND END — GHOST LOSS (found) ═══ -->
+  <div class="screen" id="p12h">
+    <div class="round-header" style="justify-content:center;">
+      <div class="round-label" style="color:#3d3d3b;">Round complete</div>
+    </div>
+    <div class="end-wrap">
+      <div class="result-badge loss">✕ &nbsp;Hunter found you</div>
+      <div class="score-row">
+        <div class="score-tile">
+          <div class="score-val ember">2</div>
+          <div class="score-lbl">Clues revealed</div>
+        </div>
+        <div class="score-tile">
+          <div class="score-val">8:43</div>
+          <div class="score-lbl">Time left</div>
+        </div>
+        <div class="score-tile">
+          <div class="score-val">34s</div>
+          <div class="score-lbl">Final window</div>
+        </div>
+      </div>
+      <div class="reveal-card">
+        <div class="reveal-eyebrow">Clues you set</div>
+        <div class="reveal-line confirmed">Wide shot — revealed</div>
+        <div class="reveal-line confirmed">Tight crop — revealed</div>
+        <div class="reveal-line missed">Descriptor — not needed</div>
+      </div>
+      <div class="reveal-card">
+        <div class="reveal-eyebrow">Your position</div>
+        <div class="reveal-line" id="ghost-position-p12h">—</div>
+      </div>
+      <button class="btn-primary" style="margin-bottom:12px;" onclick="goTo('p1')">Back to lobby</button>
+      <button style="width:100%;padding:12px;background:none;border:none;color:#3d3d3b;font-size:12px;cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;">End session</button>
+    </div>
+  </div>
+
+  <!-- ═══ P13: ROUND END — HUNTER LOSS (time expired) ═══ -->
+  <div class="screen" id="p13">
+    <div class="round-header" style="justify-content:center;">
+      <div class="round-label" style="color:#3d3d3b;">Round over</div>
+    </div>
+    <div class="end-wrap">
+      <div class="result-badge loss">✕ &nbsp;Ghost survived</div>
+      <div class="score-row">
+        <div class="score-tile">
+          <div class="score-val ember" id="p13-clues-used">—</div>
+          <div class="score-lbl">Clues used</div>
+        </div>
+        <div class="score-tile">
+          <div class="score-val">0:00</div>
+          <div class="score-lbl">Time left</div>
+        </div>
+        <div class="score-tile">
+          <div class="score-val">—</div>
+          <div class="score-lbl">Final window</div>
+        </div>
+      </div>
+      <div class="reveal-card">
+        <div class="reveal-eyebrow">Clues revealed</div>
+        <div class="reveal-line confirmed" id="p13-clue1">Wide shot — general area</div>
+        <div class="reveal-line" id="p13-clue2" style="color:#3d3d3b;">Tight crop — not revealed</div>
+        <div class="reveal-line" id="p13-clue3" style="color:#3d3d3b;">Descriptor — not revealed</div>
+      </div>
+      <div class="reveal-card">
+        <div class="reveal-eyebrow">Ghost's position</div>
+        <div class="reveal-line" id="ghost-position-p13">—</div>
+      </div>
+      <button class="btn-primary" style="margin-bottom:12px;" onclick="goTo('p1')">Back to lobby</button>
+      <button style="width:100%;padding:12px;background:none;border:none;color:#3d3d3b;font-size:12px;cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;">End session</button>
+    </div>
+  </div>
+
+  <!-- ═══ P13H: ROUND END — GHOST WIN (survived) ═══ -->
+  <div class="screen" id="p13h">
+    <div class="round-header" style="justify-content:center;">
+      <div class="round-label" style="color:#3d3d3b;">Round over</div>
+    </div>
+    <div class="end-wrap">
+      <div class="result-badge win">✓ &nbsp;You stayed hidden</div>
+      <div class="score-row">
+        <div class="score-tile">
+          <div class="score-val">2</div>
+          <div class="score-lbl">Clues revealed</div>
+        </div>
+        <div class="score-tile">
+          <div class="score-val">0:00</div>
+          <div class="score-lbl">Time left</div>
+        </div>
+        <div class="score-tile">
+          <div class="score-val ember">WIN</div>
+          <div class="score-lbl">Outcome</div>
+        </div>
+      </div>
+      <div class="reveal-card">
+        <div class="reveal-eyebrow">Your position</div>
+        <div class="reveal-line" id="ghost-position-p13h">—</div>
+      </div>
+      <button class="btn-primary" style="margin-bottom:12px;" onclick="goTo('p1')">Back to lobby</button>
+      <button style="width:100%;padding:12px;background:none;border:none;color:#3d3d3b;font-size:12px;cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;">End session</button>
+    </div>
+  </div>
+
+</div><!-- /.phone -->
+
+<!-- Nav arrows -->
+<div style="display:flex;align-items:center;gap:12px;margin-top:20px;">
+  <button onclick="navPrev()" style="background:none;border:1px solid #2a2a28;color:#6b6b68;padding:8px 16px;border-radius:8px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:13px;">← Prev</button>
+  <span id="screen-counter" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#3d3d3b;min-width:90px;text-align:center;"></span>
+  <button onclick="navNext()" style="background:none;border:1px solid #2a2a28;color:#6b6b68;padding:8px 16px;border-radius:8px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:13px;">Next →</button>
+</div>
+
+<!-- Firebase compat SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+  // ── Nav arrows ──────────────────────────
+  const SCREENS = ['p1','p2','p3','p4w','p4l','p5','p6s','p6h','p7h','p7s','p8s','p9s','p10s','p8h','p9h','p11','p12','p12h','p13','p13h'];
+  function updateCounter() {
+    const idx = SCREENS.indexOf(currentScreen);
+    document.getElementById('screen-counter').textContent = (idx + 1) + ' / ' + SCREENS.length;
+  }
+  function navPrev() {
+    const idx = SCREENS.indexOf(currentScreen);
+    if (idx > 0) { goTo(SCREENS[idx - 1]); updateCounter(); }
+  }
+  function navNext() {
+    const idx = SCREENS.indexOf(currentScreen);
+    if (idx < SCREENS.length - 1) { goTo(SCREENS[idx + 1]); updateCounter(); }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    updateCounter();
+    // Auto-join if launched from Scout lobby with ?room=CODE
+    const params = new URLSearchParams(window.location.search);
+    const prefilledRoom = params.get('room');
+    if (prefilledRoom) {
+      const input = document.getElementById('room-input');
+      if (input) {
+        input.value = prefilledRoom.toLowerCase().replace(/[^a-z0-9]/g, '');
+        onRoomInput();
+        // Small delay so Firebase finishes init before the transaction
+        setTimeout(joinRoom, 300);
+      }
+    }
+  });
+
+  firebase.initializeApp({
+    apiKey:            'AIzaSyAht1y2pIt_gEXlUQEwtOyYEKFhXHZ-Tms',
+    authDomain:        'burned-prototype.firebaseapp.com',
+    databaseURL:       'https://burned-prototype-default-rtdb.asia-southeast1.firebasedatabase.app',
+    projectId:         'burned-prototype',
+    storageBucket:     'burned-prototype.firebasestorage.app',
+    messagingSenderId: '1063131985005',
+    appId:             '1:1063131985005:web:597b93d821fa7b43537b64',
+  });
+  const db = firebase.database();
+
+  // ── State ────────────────────────────────
+  let currentScreen = 'p1';
+  let roomRef       = null;
+  let myId          = null;
+  let oppId         = null;
+  let iAmCaller     = false;
+  let iWonFlip      = false;
+  let myRole        = null;   // 'seeker' | 'hider'
+  let chosenRole    = null;   // pending role choice before confirm
+  let roundMinutes  = 15;
+
+  // ── Navigation ───────────────────────────
+  function goTo(id) {
+    document.getElementById(currentScreen).classList.remove('active');
+    ['p10s-sheet','p9h-sheet'].forEach(s => { const el = document.getElementById(s); if (el) el.classList.remove('shown'); });
+    currentScreen = id;
+    document.getElementById(id).classList.add('active');
+    updateCounter();
+    if (id === 'p7s') runP7sTypewriter();
+    if (id === 'p8s') { if (roomRef) fbSyncRoundTimer('p8s-timer'); else startRoundTimer('p8s-timer', roundMinutes * 60, () => navigateToResult('ghost-win')); }
+    if (id === 'p9s') { if (roomRef) fbSyncRoundTimer('p9s-timer'); else startRoundTimer('p9s-timer', roundMinutes * 60, () => navigateToResult('ghost-win')); }
+    if (id === 'p8h') { if (roomRef) fbSyncRoundTimer('p8h-timer'); else startRoundTimer('p8h-timer', roundMinutes * 60); }
+    if (id === 'p10s') { if (roomRef) fbSyncFinalCountdown('p10s-countdown', () => navigateToResult('ghost-win')); else startCountdown('p10s-countdown', 90, () => goTo('p13')); setTimeout(() => { const s = document.getElementById('p10s-sheet'); if (s) s.classList.add('shown'); }, 400); }
+    if (id === 'p9h') { if (roomRef) fbSyncFinalCountdown('p9h-countdown'); else startCountdown('p9h-countdown', 90); setTimeout(() => { const s = document.getElementById('p9h-sheet'); if (s) s.classList.add('shown'); }, 400); }
+    const gp = ghostPosition || '—';
+    if (id === 'p12')   { const el = document.getElementById('ghost-position-text');   if (el) el.textContent = gp; }
+    if (id === 'p12h')  { const el = document.getElementById('ghost-position-p12h');   if (el) el.textContent = gp; }
+    if (id === 'p13')   { const el = document.getElementById('ghost-position-p13');    if (el) el.textContent = gp; }
+    if (id === 'p13h')  { const el = document.getElementById('ghost-position-p13h');   if (el) el.textContent = gp; }
+  }
+
+  function dismissSheet(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('shown');
+  }
+
+  function showGhostSignal() {
+    const sheet = document.getElementById('ghost-signal-sheet');
+    if (sheet) sheet.classList.add('shown');
+  }
+
+  function confirmGhostSignal() {
+    const sheet = document.getElementById('ghost-signal-sheet');
+    if (sheet) sheet.classList.remove('shown');
+    if (roomRef) {
+      fbWriteOutcome('hunter-win');
+    } else {
+      goTo('p12h');
+    }
+  }
+
+  function dismissGhostSignal() {
+    const sheet = document.getElementById('ghost-signal-sheet');
+    if (sheet) sheet.classList.remove('shown');
+    if (roomRef) {
+      roomRef.child('round/lockedBy').set(null);
+    }
+  }
+
+  // ── Round timer (MM:SS) ──────────────
+  let _roundTimerHandle = null;
+  function startRoundTimer(elId, totalSeconds, onExpiry) {
+    clearInterval(_roundTimerHandle);
+    let s = totalSeconds;
+    function render() {
+      const m = Math.floor(s / 60);
+      const sec = s % 60;
+      const el = document.getElementById(elId);
+      if (!el) return;
+      el.textContent = m + ':' + String(sec).padStart(2, '0');
+      el.classList.toggle('urgent', s <= 60);
+    }
+    render();
+    _roundTimerHandle = setInterval(() => {
+      if (s > 0) { s--; render(); }
+      else { clearInterval(_roundTimerHandle); if (onExpiry) onExpiry(); }
+    }, 1000);
+  }
+
+  // ── 90s countdown ────────────────────
+  let _countdownHandle = null;
+  let _flashHandle = null;
+  function startCountdown(elId, total, onExpiry) {
+    clearInterval(_countdownHandle);
+    clearTimeout(_flashHandle);
+    let s = total;
+    const ringEl = document.getElementById(elId.replace('-countdown', '-ring'));
+    const el = document.getElementById(elId);
+    if (el) {
+      el.textContent = s;
+      el.classList.remove('urgent', 'countdown-flash');
+    }
+    if (ringEl) fireRing(ringEl, s, total);
+    _countdownHandle = setInterval(() => {
+      if (s <= 0) { clearInterval(_countdownHandle); if (onExpiry) onExpiry(); return; }
+      s--;
+      if (!el) return;
+      el.classList.toggle('urgent', s <= 30);
+      if (ringEl) fireRing(ringEl, s, total);
+      if (s <= 10) {
+        el.classList.remove('countdown-flash');
+        void el.offsetWidth;
+        el.classList.add('countdown-flash');
+        const next = s;
+        _flashHandle = setTimeout(() => { el.textContent = next; }, 140);
+      } else {
+        el.textContent = s;
+      }
+    }, 1000);
+  }
+
+  function fireRing(ringEl, remaining, total) {
+    const progress = 1 - (remaining / total);
+    const maxScale = 1.25 + progress * 0.95;
+    const opacity = 0.38 + progress * 0.47;
+    ringEl.style.setProperty('--ring-max-scale', maxScale.toFixed(2));
+    ringEl.style.setProperty('--ring-opacity', opacity.toFixed(2));
+    ringEl.classList.remove('fire');
+    void ringEl.offsetWidth;
+    ringEl.classList.add('fire');
+  }
+
+  // ── Proximity border overlay ──────────
+  function setOverlay(screenId, state) {
+    const overlay = document.getElementById(screenId + '-overlay');
+    overlay.className = 'proximity-overlay state-' + state;
+    const btns = overlay.closest('.screen').querySelectorAll('.pulse-demo-btn');
+    btns.forEach(b => { b.className = 'pulse-demo-btn'; });
+    event.target.className = 'pulse-demo-btn active-' + state;
+  }
+
+  function runP7sTypewriter() {
+    const el = document.getElementById('p7s-typed');
+    el.textContent = '';
+    const text = 'Ghost is going dark.';
+    let i = 0;
+    const t = setInterval(() => {
+      el.textContent += text[i++];
+      if (i >= text.length) clearInterval(t);
+    }, 55);
+  }
+
+  // ── P1: Room input ───────────────────────
+  function onRoomInput() {
+    const v = document.getElementById('room-input').value.trim();
+    document.getElementById('join-btn').disabled = v.length < 2;
+    document.getElementById('room-error').textContent = '';
+  }
+
+  function joinRoom() {
+    const code = document.getElementById('room-input').value.trim().toLowerCase();
+    if (!code) return;
+    myId = 'pu_' + Math.random().toString(36).slice(2, 9);
+    roomRef = db.ref('pursuit-rooms/' + code);
+
+    roomRef.transaction(cur => {
+      if (cur === null) {
+        // First player — create room
+        return {
+          players: { [myId]: { connected: true } },
+          phase:   'waiting',
+          flip:    { caller: null, call: null, result: null, resolved: false },
+          roles:   {},
+          setup:   { timer: 15, boundary: '', confirmed: false },
+          clues:   { ready: false },
+        };
+      }
+      const existing = Object.keys(cur.players || {});
+      if (existing.length >= 2) return; // full — abort
+      cur.players[myId] = { connected: true };
+      return cur;
+    }, (err, committed) => {
+      if (!committed) {
+        document.getElementById('room-error').textContent = 'Room is full. Try a different code.';
+        return;
+      }
+      document.getElementById('room-display').textContent = 'Room · ' + code;
+      setupPresence();
+      waitForOpponent();
+      goTo('p2');
+    });
+  }
+
+  function setupPresence() {
+    const connRef = roomRef.child('players/' + myId + '/connected');
+    firebase.database().ref('.info/connected').on('value', snap => {
+      if (snap.val()) {
+        connRef.onDisconnect().set(false);
+        connRef.set(true);
+      }
+    });
+  }
+
+  // ── P2: Wait for opponent ────────────────
+  function waitForOpponent() {
+    roomRef.child('players').on('value', snap => {
+      const players = snap.val() || {};
+      const others  = Object.keys(players).filter(id => id !== myId);
+      if (others.length > 0 && !oppId) {
+        oppId = others[0];
+        assignCaller();
+      }
+    });
+  }
+
+  // ── Assign caller (atomic) ───────────────
+  function assignCaller() {
+    roomRef.child('flip/caller').transaction(val => {
+      if (val !== null) return; // already set — abort
+      // Randomly pick between myId and oppId
+      return Math.random() < 0.5 ? myId : oppId;
+    }, (err, committed, snap) => {
+      const caller  = snap.val();
+      iAmCaller     = (caller === myId);
+      listenForFlipResult();
+      listenForRoleAssignment();
+      listenForSetupConfirm();
+      listenForCluesReady();
+      listenForRoundStart();
+      listenForPhaseChanges();
+      listenForLockIn();
+      listenForOutcome();
+      goTo('p3');
+      setupFlipScreen();
+    });
+  }
+
+  // ── P3: Set up the flip screen ───────────
+  function setupFlipScreen() {
+    setTimeout(() => {
+      const strip = document.getElementById('caller-strip');
+      strip.style.visibility = 'visible';
+      if (iAmCaller) {
+        document.getElementById('caller-eyebrow').textContent = "you're calling it";
+        document.getElementById('caller-name').textContent = 'You';
+        document.getElementById('p3-title').textContent = 'Make your call.';
+        document.getElementById('p3-body').textContent = 'Ember or ash — call it before it drops.';
+        setTimeout(() => {
+          document.getElementById('p3-call-bar').style.display = 'block';
+          initFlipSlider();
+        }, 2000);
+      } else {
+        document.getElementById('caller-eyebrow').textContent = 'calling it';
+        document.getElementById('caller-name').textContent = 'Opponent';
+        document.getElementById('p3-title').textContent = "They're calling it.";
+        document.getElementById('p3-body').textContent = 'Wait for the ember to drop.';
+        document.getElementById('p3-wait-bar').style.display = 'block';
+      }
+    }, 700);
+  }
+
+  // ── Flip slider ──────────────────────────
+  function initFlipSlider() {
+    const track  = document.getElementById('flip-track');
+    const thumb  = document.getElementById('flip-thumb');
+    const lEmber = document.getElementById('label-ember');
+    const lAsh   = document.getElementById('label-ash');
+
+    // Pill is half the track width
+    const thumbW     = (track.offsetWidth / 2) - 4;
+    const minLeft    = 4;
+    const maxLeft    = track.offsetWidth - thumbW - 4;
+    const centerLeft = (track.offsetWidth - thumbW) / 2;
+
+    thumb.style.width = thumbW + 'px';
+    thumb.style.left  = centerLeft + 'px';
+
+    let startX = 0, offsetX = 0, dragging = false, committed = false;
+
+    function update(x) {
+      const left = Math.max(minLeft, Math.min(maxLeft, x));
+      thumb.style.left = left + 'px';
+      const ratio = (left - centerLeft) / (maxLeft - centerLeft); // -1 → +1
+
+      if (ratio < -0.45) {
+        thumb.style.background = '#C8521A';
+        lEmber.style.color = '#0d0d0b';
+        lAsh.style.color   = '#3d3d3b';
+      } else if (ratio > 0.45) {
+        thumb.style.background = '#4a4a48';
+        lAsh.style.color   = '#0d0d0b';
+        lEmber.style.color = '#3d3d3b';
+      } else {
+        thumb.style.background = '#1e1e1c';
+        lEmber.style.color = '#3d3d3b';
+        lAsh.style.color   = '#3d3d3b';
+      }
+      return ratio;
+    }
+
+    function commit(call) {
+      committed = true;
+      thumb.style.transition = 'left 0.2s ease, background 0.18s';
+      thumb.style.left = (call === 'lit' ? minLeft : maxLeft) + 'px';
+      track.style.pointerEvents = 'none';
+      if (call === 'lit') {
+        thumb.style.background = '#C8521A';
+        lEmber.style.color = '#0d0d0b';
+      } else {
+        thumb.style.background = '#4a4a48';
+        lAsh.style.color = '#0d0d0b';
+      }
+      setTimeout(() => makeCall(call), 250);
+    }
+
+    function onEnd() {
+      if (!dragging || committed) return;
+      dragging = false;
+      const left  = parseFloat(thumb.style.left);
+      const ratio = (left - centerLeft) / (maxLeft - centerLeft);
+      if (ratio < -0.45)     commit('lit');
+      else if (ratio > 0.45) commit('dark');
+      else {
+        thumb.style.transition = 'left 0.2s ease, background 0.18s';
+        update(centerLeft);
+        offsetX = 0;
+      }
+    }
+
+    thumb.addEventListener('mousedown', e => {
+      if (committed) return;
+      dragging = true;
+      offsetX = parseFloat(thumb.style.left);
+      startX  = e.clientX - offsetX;
+      thumb.style.transition = 'none';
+      e.preventDefault();
+    });
+    thumb.addEventListener('touchstart', e => {
+      if (committed) return;
+      dragging = true;
+      offsetX = parseFloat(thumb.style.left);
+      startX  = e.touches[0].clientX - offsetX;
+      thumb.style.transition = 'none';
+      e.preventDefault();
+    }, { passive: false });
+
+    document.addEventListener('mousemove', e => {
+      if (!dragging || committed) return;
+      update(e.clientX - startX);
+    });
+    document.addEventListener('touchmove', e => {
+      if (!dragging || committed) return;
+      update(e.touches[0].clientX - startX);
+      e.preventDefault();
+    }, { passive: false });
+
+    document.addEventListener('mouseup', onEnd);
+    document.addEventListener('touchend', onEnd);
+  }
+
+  // ── Caller makes their call ──────────────
+  function makeCall(call) {
+    const result = Math.random() < 0.5 ? 'lit' : 'dark';
+    roomRef.child('flip').update({ call, result, resolved: true });
+  }
+
+  // ── Listen for flip result (both players) ─
+  let flipAnimDone = false;
+  function listenForFlipResult() {
+    roomRef.child('flip').on('value', snap => {
+      const flip = snap.val();
+      if (flip && flip.resolved && flip.result && !flipAnimDone) {
+        flipAnimDone = true;
+        runFlipAnimation(flip.call, flip.result);
+      }
+    });
+  }
+
+  function runFlipAnimation(call, result) {
+    document.getElementById('p3-call-bar').style.display  = 'none';
+    document.getElementById('p3-wait-bar').style.display  = 'none';
+    document.getElementById('caller-strip').style.display = 'none';
+    document.getElementById('p3-header').style.display    = 'none';
+
+    const prefixEl = document.getElementById('t-prefix');
+    const wordEl   = document.getElementById('t-word');
+    const cursorEl = document.getElementById('t-cursor');
+    prefixEl.textContent = '';
+    wordEl.textContent   = '';
+    wordEl.className     = 't-word';
+    cursorEl.classList.remove('done');
+
+    const word    = result === 'lit' ? 'EMBER' : 'ASH';
+    const isEmber = result === 'lit';
+    const prefix  = 'CALCULATING... ';
+
+    // Type prefix
+    let i = 0;
+    const typePrefix = setInterval(() => {
+      prefixEl.textContent += prefix[i++];
+      if (i >= prefix.length) {
+        clearInterval(typePrefix);
+        // Pause, then type result word
+        setTimeout(() => {
+          prefixEl.textContent = 'RESULT: ';
+          wordEl.className = 't-word' + (isEmber ? '' : ' ash');
+          let j = 0;
+          const typeWord = setInterval(() => {
+            wordEl.textContent += word[j++];
+            if (j >= word.length) {
+              clearInterval(typeWord);
+              cursorEl.classList.add('done');
+
+              roomRef.child('flip').once('value', s => {
+                const f = s.val();
+                iWonFlip = (f.result === f.call)
+                  ? (f.caller === myId)
+                  : (f.caller !== myId);
+                setTimeout(() => {
+                  document.getElementById('p3-continue-bar').style.display = 'block';
+                }, 900);
+              });
+            }
+          }, 90);
+        }, 400);
+      }
+    }, 35);
+  }
+
+  // ── P4: Role choice / waiting ────────────
+  function goToRoleChoice() {
+    if (iWonFlip) {
+      goTo('p4w');
+    } else {
+      goTo('p4l');
+    }
+  }
+
+  function selectRole(role) {
+    chosenRole = role;
+    document.getElementById('card-seeker').classList.toggle('selected', role === 'seeker');
+    document.getElementById('card-hider').classList.toggle('selected', role === 'hider');
+    document.getElementById('role-confirm-btn').disabled = false;
+  }
+
+  function confirmRole() {
+    if (!chosenRole) return;
+    myRole = chosenRole;
+    const oppRole = chosenRole === 'seeker' ? 'hider' : 'seeker';
+    roomRef.child('roles').set({ [myId]: myRole, [oppId]: oppRole });
+    showRoleReveal();
+  }
+
+  // ── Listen for role assignment (loser's device) ──
+  function listenForRoleAssignment() {
+    roomRef.child('roles').on('value', snap => {
+      const roles = snap.val();
+      if (!roles || !roles[myId]) return;
+      if (currentScreen === 'p4l') {
+        myRole = roles[myId];
+        showRoleReveal();
+      }
+    });
+  }
+
+  // ── P5: Role reveal ──────────────────────
+  function showRoleReveal() {
+    const isSeeker = myRole === 'seeker';
+    document.getElementById('reveal-icon').innerHTML = isSeeker
+      ? '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>'
+      : '<svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9v10l2.5-2 2.5 2 2.5-2 2.5 2 2.5-2V9C17 5.13 15.87 2 12 2z"/><circle cx="10" cy="10" r="1" fill="#C8521A" stroke="none"/><circle cx="14" cy="10" r="1" fill="#C8521A" stroke="none"/></svg>';
+    document.getElementById('reveal-label').textContent = isSeeker ? "You're hunting" : "You're going dark";
+    document.getElementById('reveal-title').textContent = isSeeker ? 'Hunter'  : 'Ghost';
+    document.getElementById('reveal-sub').textContent   = isSeeker
+      ? 'Navigate the space. Read the clues. Lock in before the timer expires.'
+      : 'Find your spot. Prepare your clues. Stay still and make them work for it.';
+    goTo('p5');
+  }
+
+  function afterRoleReveal() {
+    if (myRole === 'seeker') goTo('p6s');
+    else                      goTo('p6h');
+  }
+
+  // ── P6S: Seeker setup ────────────────────
+  function adjustTimer(delta) {
+    roundMinutes = Math.min(30, Math.max(5, roundMinutes + delta));
+    document.getElementById('timer-val').innerHTML = roundMinutes + ' <span>min</span>';
+    document.getElementById('btn-minus').disabled = roundMinutes <= 5;
+    document.getElementById('btn-plus').disabled  = roundMinutes >= 30;
+    checkSetupReady();
+  }
+
+  function checkSetupReady() {
+    const boundary = (document.getElementById('boundary-input') || {}).value || '';
+    document.getElementById('setup-btn').disabled = boundary.trim().length < 2;
+  }
+
+  function confirmSetup() {
+    const boundary = document.getElementById('boundary-input').value.trim();
+    roomRef.child('setup').update({ timer: roundMinutes, boundary, confirmed: true });
+    goTo('p7s');
+  }
+
+  // ── P6H: Listen for setup confirm ───────
+  function listenForSetupConfirm() {
+    roomRef.child('setup').on('value', snap => {
+      const setup = snap.val();
+      if (!setup || !setup.confirmed) return;
+      if (setup.timer) roundMinutes = setup.timer;
+      if (currentScreen === 'p6h') {
+        document.getElementById('hider-setup-status').textContent = '✓ Setup confirmed. Prep your clues.';
+        setTimeout(() => goTo('p7h'), 1200);
+      }
+    });
+  }
+
+  let ghostPosition = '';
+
+  // ── P7H: Clue prep ───────────────────────
+  function checkCluesReady() {
+    const desc = document.getElementById('descriptor-input').value.trim();
+    const pos = (document.getElementById('position-input') || {}).value || '';
+    document.getElementById('clues-ready-btn').disabled = desc.length < 2 || pos.trim().length < 2;
+  }
+
+  function confirmClues() {
+    const desc = document.getElementById('descriptor-input').value.trim();
+    const pos  = document.getElementById('position-input').value.trim();
+    ghostPosition = pos;
+    roomRef.child('clues').update({ descriptor: desc, position: pos, ready: true });
+    goTo('p8h');
+  }
+
+  // ── P7S: Listen for ghost clues ready → start round ──────────────
+  function listenForCluesReady() {
+    roomRef.child('clues').on('value', snap => {
+      const clues = snap.val();
+      if (!clues || !clues.ready) return;
+      // Populate descriptor on final-clue screen
+      const descEl = document.getElementById('p10s-descriptor');
+      if (descEl && clues.descriptor) descEl.textContent = clues.descriptor;
+      if (currentScreen === 'p7s') {
+        // Ghost is ready — write startedAt and navigate hunter to active round
+        roomRef.child('round').update({ phase: 'clue1', startedAt: firebase.database.ServerValue.TIMESTAMP });
+        goTo('p8s');
+      }
+    });
+  }
+
+  // ── Round start (ghost side) ──────────────────────────────────────
+  function listenForRoundStart() {
+    roomRef.child('round/startedAt').on('value', snap => {
+      if (!snap.val()) return;
+      if (currentScreen === 'p7h') {
+        fbSyncRoundTimer('p8h-timer');
+        goTo('p8h');
+      }
+    });
+  }
+
+  // ── Synced round timer (reads startedAt from Firebase) ───────────
+  function fbSyncRoundTimer(elId) {
+    clearInterval(_roundTimerHandle);
+    const totalSeconds = roundMinutes * 60;
+    roomRef.child('round/startedAt').once('value', snap => {
+      const startedAt = snap.val();
+      if (!startedAt) { startRoundTimer(elId, totalSeconds); return; }
+      function tick() {
+        const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+        const remaining = Math.max(0, totalSeconds - elapsed);
+        const m = Math.floor(remaining / 60);
+        const s = remaining % 60;
+        const el = document.getElementById(elId);
+        if (el) {
+          el.textContent = m + ':' + String(s).padStart(2, '0');
+          el.classList.toggle('urgent', remaining <= 60);
+        }
+        if (remaining <= 0) {
+          clearInterval(_roundTimerHandle);
+          navigateToResult('ghost-win'); // time ran out
+        }
+      }
+      tick();
+      _roundTimerHandle = setInterval(tick, 1000);
+    });
+  }
+
+  // ── Synced 90s final countdown (reads finalClueAt from Firebase) ─
+  function fbSyncFinalCountdown(elId, onExpiry) {
+    clearInterval(_countdownHandle);
+    clearTimeout(_flashHandle);
+    roomRef.child('round/finalClueAt').once('value', snap => {
+      const finalAt = snap.val();
+      if (!finalAt) { startCountdown(elId, 90, onExpiry); return; }
+      const total = 90;
+      const ringEl = document.getElementById(elId.replace('-countdown', '-ring'));
+      function tick() {
+        const elapsed = Math.floor((Date.now() - finalAt) / 1000);
+        let s = Math.max(0, total - elapsed);
+        const el = document.getElementById(elId);
+        if (el) {
+          el.classList.toggle('urgent', s <= 30);
+          if (ringEl) fireRing(ringEl, s, total);
+          if (s <= 10) {
+            el.classList.remove('countdown-flash');
+            void el.offsetWidth;
+            el.classList.add('countdown-flash');
+            _flashHandle = setTimeout(() => { el.textContent = s; }, 140);
+          } else {
+            el.textContent = s;
+          }
+        }
+        if (s <= 0) {
+          clearInterval(_countdownHandle);
+          if (onExpiry) onExpiry();
+        }
+      }
+      tick();
+      _countdownHandle = setInterval(tick, 1000);
+    });
+  }
+
+  // ── Hunter reveals clue 2 ─────────────────────────────────────────
+  function revealClue2() {
+    if (roomRef) {
+      const elapsed = 0; // timer keeps running; just update phase
+      roomRef.child('round/phase').set('clue2');
+    }
+    goTo('p9s');
+  }
+
+  // ── Hunter reveals final clue ─────────────────────────────────────
+  function revealFinalClue() {
+    if (roomRef) {
+      roomRef.child('round').update({ phase: 'final', finalClueAt: firebase.database.ServerValue.TIMESTAMP });
+    }
+    goTo('p10s');
+  }
+
+  // ── Listen for phase changes (ghost side) ────────────────────────
+  function listenForPhaseChanges() {
+    roomRef.child('round/phase').on('value', snap => {
+      const phase = snap.val();
+      if (phase === 'final' && (currentScreen === 'p8h')) {
+        fbSyncFinalCountdown('p9h-countdown');
+        goTo('p9h');
+      }
+    });
+  }
+
+  // ── Hunter locks in (transaction prevents double-lock) ───────────
+  function fbLockIn() {
+    if (!roomRef) { goTo('p11'); return; }
+    roomRef.child('round/lockedBy').transaction(val => {
+      if (val !== null) return; // already locked by someone else
+      return myId;
+    }, (err, committed) => {
+      if (committed) goTo('p11');
+      // else: someone else locked first — stay on p10s
+    });
+  }
+
+  // ── Hunter cancels lock-in (wrong person) ────────────────────────
+  function fbCancelLockIn() {
+    if (roomRef) roomRef.child('round/lockedBy').set(null);
+    goTo('p10s');
+  }
+
+  // ── Ghost: watch for lock-in; Hunter: watch for cancel ───────────
+  function listenForLockIn() {
+    roomRef.child('round/lockedBy').on('value', snap => {
+      const lockedBy = snap.val();
+      if (myRole === 'hider') {
+        if (lockedBy) {
+          showGhostSignal();
+        } else {
+          // hunter cancelled — dismiss sheet if shown
+          const sheet = document.getElementById('ghost-signal-sheet');
+          if (sheet) sheet.classList.remove('shown');
+        }
+      }
+      if (myRole === 'seeker') {
+        if (!lockedBy && currentScreen === 'p11') {
+          // ghost dismissed — go back to final countdown
+          goTo('p10s');
+        }
+      }
+    });
+  }
+
+  // ── Write outcome (ghost calls this) ─────────────────────────────
+  function fbWriteOutcome(outcome) {
+    // capture time remaining from running countdown
+    const countdownEl = document.getElementById('p9h-countdown');
+    const timeLeft = countdownEl ? parseInt(countdownEl.textContent, 10) || 0 : 0;
+    roomRef.child('round').update({ outcome, timeLeft });
+    navigateToResult(outcome);
+  }
+
+  // ── Route each player to their result screen ─────────────────────
+  function navigateToResult(outcome) {
+    clearInterval(_roundTimerHandle);
+    clearInterval(_countdownHandle);
+    // outcome: 'hunter-win' | 'ghost-win'
+    const role = myRole || 'seeker'; // demo fallback: assume seeker
+    if (role === 'seeker') {
+      goTo(outcome === 'hunter-win' ? 'p12' : 'p13');
+    } else {
+      goTo(outcome === 'hunter-win' ? 'p12h' : 'p13h');
+    }
+  }
+
+  // ── Other device listens for outcome ─────────────────────────────
+  function listenForOutcome() {
+    roomRef.child('round/outcome').on('value', snap => {
+      if (!snap.val()) return;
+      navigateToResult(snap.val());
+    });
+  }
+
+  // ── Leave room + cleanup ──────────────────────────────────────────
+  function fbLeaveRoom() {
+    clearInterval(_roundTimerHandle);
+    clearInterval(_countdownHandle);
+    clearTimeout(_flashHandle);
+    if (roomRef) {
+      roomRef.off();
+      roomRef.remove();
+      roomRef = null;
+    }
+    myId = null; myRole = null; oppId = null;
+    ghostPosition = '';
+    goTo('p1');
+  }
+</script>
+</body>
+</html>
