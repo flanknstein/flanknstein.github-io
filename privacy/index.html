@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy — Burned.</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='5' fill='%230d0d0b'/%3E%3Ctext x='3' y='23' font-family='monospace' font-size='20' font-weight='700' fill='%23F0EDE8'%3EB%3C/text%3E%3Crect x='16' y='8' width='3' height='15' rx='1' fill='%23C8521A'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0D0D0B;
+    color: #6b6b68;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    line-height: 1.9;
+    padding: 0 24px 96px;
+  }
+
+  .wrap { max-width: 720px; margin: 0 auto; }
+
+  header {
+    padding: 56px 0 40px;
+    border-bottom: 1px solid #1e1e1c;
+    margin-bottom: 40px;
+  }
+
+  .back {
+    display: inline-block;
+    font-size: 12px;
+    color: #3d3d3b;
+    text-decoration: none;
+    margin-bottom: 28px;
+    transition: color 0.2s;
+  }
+  .back:hover { color: #6b6b68; }
+
+  h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: #F0EDE8;
+    letter-spacing: -0.01em;
+    margin-bottom: 10px;
+  }
+  h1 .dot { color: #C8521A; }
+
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #C8521A;
+    margin-bottom: 14px;
+  }
+
+  .updated { font-size: 12px; color: #3d3d3b; }
+
+  h2 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #F0EDE8;
+    margin: 44px 0 14px;
+    letter-spacing: 0.01em;
+  }
+
+  p { margin-bottom: 16px; }
+
+  ul { margin: 0 0 16px 0; padding-left: 20px; }
+  li { margin-bottom: 10px; }
+
+  strong { color: #9a9a96; font-weight: 700; }
+
+  a { color: #9a9a96; text-decoration: underline; }
+  a:hover { color: #C8521A; }
+
+  .callout {
+    background: #111110;
+    border: 1px solid #2a2a28;
+    border-left: 2px solid #C8521A;
+    border-radius: 0 10px 10px 0;
+    padding: 20px 24px;
+    margin: 0 0 24px;
+  }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* Unresolved decisions. Every one of these must be replaced before this
+     page goes live — they are deliberately loud. */
+  .todo {
+    color: #C8521A;
+    border-bottom: 1px dotted #C8521A;
+    font-weight: 700;
+  }
+
+  .note {
+    font-size: 12px;
+    color: #3d3d3b;
+    border-top: 1px solid #1e1e1c;
+    margin-top: 56px;
+    padding-top: 24px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <a class="back" href="/">&larr; burn3d.com</a>
+    <div class="eyebrow">Privacy</div>
+    <h1>Burned<span class="dot">.</span></h1>
+    <p class="updated">Last updated 21 August 2026</p>
+  </header>
+
+  <div class="callout">
+    <p><strong>The short version.</strong> This site measures its own traffic, and if you join the waitlist we store your email address so we can tell you when Burned is ready. That's all. No accounts, no selling your data, and nothing else unless you ask us for it.</p>
+  </div>
+
+  <p>This policy covers the website at burn3d.com. The Burned app is in private testing and is not distributed from this site; testers get a separate privacy notice with the build, describing what the app collects.</p>
+
+  <h2>1. Analytics</h2>
+  <p>burn3d.com uses <strong>Google Analytics</strong> to count visits and understand which pages people look at. It sets cookies in your browser and shares your IP address, approximate location, device type, and browsing activity on this site with Google. We use it in aggregate — we are not trying to identify you personally, and we do not attempt to link analytics data to a waitlist signup.</p>
+  <p>You can opt out with Google's <a href="https://tools.google.com/dlpage/gaoptout" rel="noopener">browser add-on</a>, or by blocking cookies for this site.</p>
+
+  <h2>2. Fonts</h2>
+  <p>The site loads its typeface from Google Fonts. Your browser contacts Google's servers to fetch it, which means Google receives your IP address.</p>
+
+  <h2>3. The waitlist</h2>
+  <p>If you enter your email address, we store it and nothing else — no name, no location, no tracking data attached to it. We record which signup form it came from so we can tell one recruitment source from another, and that you confirmed you are 18 or over.</p>
+  <p>Your address is submitted to our own server, which passes it to <strong>EmailOctopus</strong>, the service that stores the list and sends the mail.</p>
+  <p><strong>Joining the waitlist means one thing: we will tell you when Burned is available to play.</strong> If you also tick the box asking to hear about progress before then, we will send occasional updates on how development and testing are going. If you leave that box unticked, you will not get them. Either way, every email includes an unsubscribe link, and unsubscribing removes you from the list.</p>
+
+  <h2>4. Who else handles your data</h2>
+  <ul>
+    <li><strong>Google Analytics</strong> — website traffic measurement.</li>
+    <li><strong>EmailOctopus</strong> — stores the waitlist and sends the mail.</li>
+    <li><strong>Cloudflare</strong> — runs the domain and the small service that passes waitlist signups to EmailOctopus.</li>
+  </ul>
+  <p>We do not sell your data, and we do not share it with advertisers.</p>
+
+  <h2>5. How long it is kept</h2>
+  <p>Your email address is kept until you unsubscribe or ask us to remove it. Analytics data is retained according to Google's standard retention settings.</p>
+
+  <h2>6. Your choices</h2>
+  <ul>
+    <li><strong>Waitlist</strong> — unsubscribe from any email, or write to us and we will delete your address. If you opted in to progress updates and would rather only hear about launch, tell us and we will change it.</li>
+    <li><strong>Analytics</strong> — block cookies for this site, or use Google's opt-out add-on.</li>
+  </ul>
+  <p>Depending on where you live you may have additional rights to access, correct, or delete personal information, and to complain to a regulator. Write to us at the address below and we will help.</p>
+
+  <h2>7. Age</h2>
+  <p>Burned arranges meetings between people in public places. It is not intended for children. <strong>You must be at least 18 years old to use Burned or to join the waitlist.</strong> We ask you to confirm this when you sign up, and we record that confirmation.</p>
+  <p>We do not knowingly collect information from anyone younger. If you believe someone under 18 has given us their details, contact us and we will delete them.</p>
+
+  <h2>8. Changes</h2>
+  <p>Burned is in active development, and what it collects will change as it grows. When this policy changes we will update the date at the top. If a change is significant and you are on the waitlist, we will tell you by email.</p>
+
+  <h2>9. Contact</h2>
+  <p>Questions, deletion requests, or anything else: <a href="mailto:contact@burn3d.com">contact@burn3d.com</a></p>
+  <p>Burned is operated by Loic Tuchagues, a sole trader in Australia.</p>
+
+  <p class="note">
+    This policy describes what the website actually does. It has not been reviewed
+    by a lawyer — worth doing before app store submission, since the app collects
+    location data and that attracts extra scrutiny.
+  </p>
+
+</div>
+</body>
+</html>
