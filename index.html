@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='5' fill='%230d0d0b'/%3E%3Ctext x='3' y='23' font-family='monospace' font-size='20' font-weight='700' fill='%23F0EDE8'%3EB%3C/text%3E%3Crect x='16' y='8' width='3' height='15' rx='1' fill='%23C8521A'/%3E%3C/svg%3E">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Burned.</title>
+<title>Burn3d.</title>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-PCS0J0C1ZK"></script>
 <script>
@@ -92,7 +92,7 @@
     white-space: nowrap;
   }
 
-  /* ── Glitch lives only on the word "Burned" ── */
+  /* ── Glitch lives only on the word "Burn3d" ── */
   #text-orange {
     color: #C8521A;
     display: inline-block;
@@ -328,8 +328,8 @@
   </div>
 
   <div id="wl-form">
-    <p style="font-size:15px;color:#6b6b68;line-height:1.8;margin-bottom:20px;">Leave your email. You'll know the moment Burned launches.</p>
-    <p style="font-size:12px;color:#3d3d3b;line-height:1.7;margin-bottom:20px;font-family:'JetBrains Mono',monospace;">Early testing is in <span style="color:#6b6b68;">Melbourne, Australia</span> only. Somewhere else? Join anyway — we'll tell you when Burned reaches you.</p>
+    <p style="font-size:15px;color:#6b6b68;line-height:1.8;margin-bottom:20px;">Leave your email. You'll know the moment Burn3d launches.</p>
+    <p style="font-size:12px;color:#3d3d3b;line-height:1.7;margin-bottom:20px;font-family:'JetBrains Mono',monospace;">Early testing is in <span style="color:#6b6b68;">Melbourne, Australia</span> only. Somewhere else? Join anyway — we'll tell you when Burn3d reaches you.</p>
     <input id="wl-email" type="email" inputmode="email" autocomplete="email" autocorrect="off" autocapitalize="off" spellcheck="false"
       placeholder="you@example.com"
       style="width:100%;background:#0D0D0B;border:1px solid #2a2a28;border-radius:10px;padding:14px 16px;color:#F0EDE8;font-family:'JetBrains Mono',monospace;font-size:14px;letter-spacing:0.06em;outline:none;transition:border-color 0.2s;"
@@ -337,7 +337,7 @@
 
     <!-- Minimal disclosure, at the point of collection. Must stay consistent
          with what the two checkboxes below actually consent to. -->
-    <p style="font-size:11px;color:#3d3d3b;line-height:1.6;margin-top:8px;font-family:'JetBrains Mono',monospace;">We'll only use this to tell you when Burned launches.</p>
+    <p style="font-size:11px;color:#3d3d3b;line-height:1.6;margin-top:8px;font-family:'JetBrains Mono',monospace;">We'll only use this to tell you when Burn3d launches.</p>
 
     <!-- Honeypot: hidden from people, irresistible to naive bots. Kept out of
          the tab order and off the accessibility tree. -->
@@ -374,7 +374,7 @@
 <div class="sheet" id="sheet">
   <div class="sheet-handle"></div>
   <div class="sheet-header">
-    <span class="sheet-eyebrow">Burned</span>
+    <span class="sheet-eyebrow">Burn3d</span>
     <button class="sheet-close" onclick="closeSheet()">&#x2715;</button>
   </div>
   <div class="sheet-body" id="sheet-body"><span class="sheet-cursor">_</span></div>
@@ -604,15 +604,15 @@
 })();
 
 /* ═══════════════════════════════════
-   MAIN TYPEWRITER — "don't get Burned"
+   MAIN TYPEWRITER — "don't get Burn3d"
    Prefix types at 100ms per char.
-   "Burned" slots scramble then resolve.
+   "Burn3d" slots scramble then resolve.
    Backspace starts automatically so the
    full cycle always lands on 25 seconds.
 ═══════════════════════════════════ */
 (function() {
   const PREFIX         = "don't get ";
-  const BURNED         = "Burned";
+  const BURNED         = "Burn3d";
   const CHARS          = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*<>?/|[]{}';
   const CHAR_MS        = 100;
   const SCRAMBLE_SPEED = 69;
@@ -734,7 +734,7 @@
 /* ═══════════════════════════════════
    POPUP SHEET
 ═══════════════════════════════════ */
-const SHEET_TEXT = "Burned pairs you with a stranger somewhere nearby. Neither of you knows what the other looks like. You have fifteen minutes to work it out from a handful of details before they do.\n\nNo avatars. No map to follow. Your phone puts you in the same place, then gets out of the way. Just a crowd and your instincts.";
+const SHEET_TEXT = "Burn3d pairs you with a stranger somewhere nearby. Neither of you knows what the other looks like. You have fifteen minutes to work it out from a handful of details before they do.\n\nNo avatars. No map to follow. Your phone puts you in the same place, then gets out of the way. Just a crowd and your instincts.";
 
 let sheetTypeTimer = null;
 let sheetCharIdx   = 0;
@@ -813,7 +813,7 @@ async function submitWaitlist() {
     wlSetError('That doesn\'t look like an email address.', document.getElementById('wl-email'));
     return;
   }
-  // Burned is 18+ at launch: Scout pairs you with a stranger in a public place.
+  // Burn3d is 18+ at launch: Scout pairs you with a stranger in a public place.
   // The Worker re-checks this — a client-side guard is a courtesy, not a gate.
   if (!document.getElementById('wl-age').checked) {
     wlSetError('Please confirm you\'re 18 or over.');
